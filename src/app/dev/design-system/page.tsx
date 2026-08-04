@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { Button } from "@/components";
+import { ComponentCatalogue } from "./_catalogue";
+import { ModeFrame, Section } from "./_ui";
 import {
   contrast,
   formatOklch,
@@ -84,6 +87,50 @@ const CONTRAST_PAIRS: { fg: string; bg: string; role: Role }[] = [
   { fg: "thread", bg: "surface", role: "ui" },
   { fg: "border", bg: "canvas", role: "structure" },
   { fg: "border-strong", bg: "canvas", role: "structure" },
+  // Added with the component library (Milestone 2). Components put text on
+  // three more surfaces than the foundation ever did: the sunken well behind a
+  // sidebar and a cover plate, the hover wash under a control, and paper.
+  { fg: "foreground", bg: "surface-sunken", role: "text" },
+  { fg: "muted-foreground", bg: "surface-sunken", role: "text" },
+  { fg: "walnut", bg: "surface-sunken", role: "text" },
+  { fg: "foreground", bg: "surface-hover", role: "text" },
+  { fg: "foreground", bg: "paper", role: "text" },
+  { fg: "muted-foreground", bg: "paper", role: "text" },
+  { fg: "thread", bg: "surface-sunken", role: "ui" },
+  { fg: "thread", bg: "surface-hover", role: "ui" },
+  { fg: "thread", bg: "paper", role: "ui" },
+];
+
+/**
+ * Pairings that measure below AA and are therefore forbidden.
+ *
+ * These are computed and displayed for the same reason the passing table is:
+ * a rule with the number next to it is a rule people believe. Every one of
+ * them was a plausible component decision — muted metadata on a hovered card,
+ * an olive status badge in a sidebar — and the ratio is why the library does
+ * something else instead.
+ */
+const FORBIDDEN_PAIRS: { fg: string; bg: string; instead: string }[] = [
+  {
+    fg: "muted-foreground",
+    bg: "surface-hover",
+    instead: "Metadata under a hover wash brightens to foreground.",
+  },
+  {
+    fg: "olive",
+    bg: "surface-hover",
+    instead: "No status text on a hovered surface.",
+  },
+  {
+    fg: "walnut",
+    bg: "surface-hover",
+    instead: "Walnut is structure, not a label on a control.",
+  },
+  {
+    fg: "olive",
+    bg: "surface-sunken",
+    instead: "Use a neutral badge in wells and sidebars.",
+  },
 ];
 
 const TYPE_STEPS: {
@@ -124,35 +171,6 @@ const RADII: { token: string; size: string; use: string; className: string }[] =
 ];
 
 /* ---------------------------------------------------------- primitives --- */
-
-function Section({
-  title,
-  index,
-  lede,
-  children,
-}: {
-  title: string;
-  index: string;
-  lede?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="mt-section md:mt-section-lg">
-      <div className="flex items-baseline gap-3">
-        <span className="text-2xs tabular-nums tracking-label text-muted-foreground">
-          {index}
-        </span>
-        <h2 className="font-serif text-xl tracking-display">{title}</h2>
-      </div>
-      {lede ? (
-        <p className="mt-2 max-w-reading text-sm text-muted-foreground text-pretty">
-          {lede}
-        </p>
-      ) : null}
-      <div className="mt-6">{children}</div>
-    </section>
-  );
-}
 
 function Swatch({
   token,
@@ -233,6 +251,55 @@ function ContrastTable({ tokens }: { tokens: Record<string, Oklch> }) {
                     // second meaning.
                     <span className="font-medium underline">Fails</span>
                   )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/** The pairings components must not use, with the measurement that says so. */
+function ForbiddenTable({ tokens }: { tokens: Record<string, Oklch> }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-80 border-collapse text-left">
+        <thead>
+          <tr className="border-b border-border-strong">
+            <th className="py-2 pr-4 text-2xs font-medium uppercase tracking-label text-muted-foreground">
+              Never pair
+            </th>
+            <th className="py-2 pr-4 text-2xs font-medium uppercase tracking-label text-muted-foreground">
+              Ratio
+            </th>
+            <th className="py-2 text-2xs font-medium uppercase tracking-label text-muted-foreground">
+              What the library does
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {FORBIDDEN_PAIRS.map(({ fg, bg, instead }) => {
+            const a = tokens[fg];
+            const b = tokens[bg];
+            const ratio = a && b ? contrast(a, b) : null;
+            const passes = ratio !== null && ratio >= 4.5;
+            return (
+              <tr key={`${fg}-${bg}`} className="border-b border-border">
+                <td className="py-2.5 pr-4 text-sm">
+                  {fg} <span className="text-muted-foreground">on</span> {bg}
+                </td>
+                <td className="py-2.5 pr-4 text-sm tabular-nums">
+                  {ratio ? ratio.toFixed(2) : "—"}
+                  {passes ? (
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      (passes in this mode)
+                    </span>
+                  ) : null}
+                </td>
+                <td className="py-2.5 text-xs text-muted-foreground text-pretty">
+                  {instead}
                 </td>
               </tr>
             );
@@ -331,6 +398,23 @@ function ColorPanel({ mode }: { mode: Mode }) {
 
       <div className="mt-9">
         <h3 className="text-2xs font-medium uppercase tracking-label text-muted-foreground">
+          Forbidden pairings
+        </h3>
+        <p className="mt-2 max-w-reading text-sm text-muted-foreground text-pretty">
+          Building the components turned up a trap. Surfaces step lighter as
+          they lift, so in dark mode the hover wash — not the raised surface —
+          is the lightest thing in the room, and the three quiet text tokens
+          all fall below AA on it. Each of these was a plausible component
+          decision; the number beside it is why the library does something
+          else.
+        </p>
+        <div className="mt-4">
+          <ForbiddenTable tokens={tokens} />
+        </div>
+      </div>
+
+      <div className="mt-9">
+        <h3 className="text-2xs font-medium uppercase tracking-label text-muted-foreground">
           Readability
         </h3>
         <div className="mt-4">
@@ -383,8 +467,9 @@ export default function DesignSystemPage() {
         </h1>
         <p className="mt-3 max-w-reading text-base text-muted-foreground text-pretty">
           Every colour, size, space, shape and duration the application is
-          allowed to use. Components should reach for a token on this page
-          rather than inventing a value.
+          allowed to use, and in section 08 every component built from them.
+          Screens should reach for a component here, and components for a
+          token, rather than either inventing a value.
         </p>
         <p className="mt-4 text-sm text-muted-foreground text-pretty">
           This route is not linked from the application and is excluded from
@@ -559,6 +644,37 @@ export default function DesignSystemPage() {
             </div>
           </div>
         </div>
+
+        <div className="mt-8">
+          <h3 className="text-2xs font-medium uppercase tracking-label text-muted-foreground">
+            Depth
+          </h3>
+          <p className="mt-2 max-w-reading text-sm text-muted-foreground text-pretty">
+            Two places, and no others, where the flat page acquires a third
+            dimension. Both are mixed down from materials already in the
+            palette, so neither adds a hue. The cover shadow is the one the
+            system always said it would add when covers were built, and it is
+            still the only shadow in it; the scrim exists because a dialog
+            cannot be modal without dimming the page, and shadows are not
+            available to lift it instead.
+          </p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-lg border border-border p-5">
+              <p className="text-sm font-medium">shadow-cover</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Book covers only. A cover is a real object with weight.
+              </p>
+              <div className="mt-4 h-16 w-11 rounded-sm border border-border bg-surface-sunken shadow-cover" />
+            </div>
+            <div className="rounded-lg border border-border p-5">
+              <p className="text-sm font-medium">scrim</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                The modal ground, behind a dialog and nothing else.
+              </p>
+              <div className="mt-4 h-16 rounded-md bg-scrim" />
+            </div>
+          </div>
+        </div>
       </Section>
 
       <Section
@@ -634,19 +750,13 @@ export default function DesignSystemPage() {
               Tab into these to see the ring. It appears for keyboard
               navigation only.
             </p>
+            {/* The real components, now that they exist. A page documenting
+                the system should not be hand-rolling controls beside it. */}
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                className="h-9 rounded-md bg-action px-4 text-sm font-medium text-action-foreground transition-colors duration-(--duration-quick) ease-standard hover:bg-action-hover"
-              >
-                Action
-              </button>
-              <button
-                type="button"
-                className="h-9 rounded-md border border-border bg-surface px-4 text-sm font-medium transition-colors duration-(--duration-quick) ease-standard hover:bg-surface-hover"
-              >
+              <Button size="sm">Action</Button>
+              <Button size="sm" variant="quiet">
                 Quiet
-              </button>
+              </Button>
               <a
                 href="#top"
                 className="text-sm text-muted-foreground underline underline-offset-4 transition-colors duration-(--duration-quick) ease-standard hover:text-foreground"
@@ -672,10 +782,27 @@ export default function DesignSystemPage() {
         </div>
       </Section>
 
+      <Section
+        index="08"
+        title="Components"
+        lede="The reusable library, and nothing above it. Every component appears here in both modes, built only from the tokens above. Hover, active and focus are live rather than pictured — they are real CSS states, and a screenshot of a hover state is the kind of documentation that goes stale silently. Hover the exhibits and tab through them."
+      >
+        <div id="components" className="space-y-6">
+          <ModeFrame mode="light">
+            <ComponentCatalogue mode="light" />
+          </ModeFrame>
+          <ModeFrame mode="dark">
+            <ComponentCatalogue mode="dark" />
+          </ModeFrame>
+        </div>
+      </Section>
+
       <footer className="mt-section-lg border-t border-border pt-block">
         <p className="text-sm text-muted-foreground text-pretty">
-          Milestone 1. Colour, typography, space, measure, shape and motion
-          only. No components, no data layer, no application functionality.
+          Milestone 1: colour, typography, space, measure, shape and motion.
+          Milestone 2: the component library in section 08 — thirty reusable
+          primitives and two new depth tokens. No pages, no data layer, no
+          application functionality.
         </p>
       </footer>
     </div>
