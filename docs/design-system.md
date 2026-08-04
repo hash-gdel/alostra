@@ -8,6 +8,15 @@ lives in [`ux-decisions.md`](./ux-decisions.md).
 > system changes only when a usability issue requires it — see the change
 > -control policy in
 > [`ux-decisions.md`](./ux-decisions.md#status--the-design-foundation-is-frozen).
+>
+> Milestone 2 added exactly two tokens under that policy, both under
+> [Depth](#depth): `--scrim`, without which a dialog cannot be modal, and
+> `--cover-shadow`, which this document already said would arrive when covers
+> were built. Both are mixed down from existing materials, so the palette is
+> unchanged. Nothing else moved.
+
+The components built on these tokens are documented in
+[`components.md`](./components.md).
 
 **Source of truth:** `src/app/globals.css`. This document mirrors it. If the
 two ever disagree, the CSS is correct and this file is stale.
@@ -25,6 +34,13 @@ Router, TypeScript strict.
 
 1. **Use tokens, not values.** No arbitrary bracket values where a token
    exists. `src` currently contains zero.
+
+   It contains exactly one arbitrary *variant*:
+   `[&::-webkit-search-cancel-button]:appearance-none` in `SearchInput`, which
+   suppresses the browser's own clear button so the field has one clear
+   affordance rather than two. That is a selector for a pseudo-element, not a
+   value, and no token can express it. Arbitrary variants are acceptable where
+   the platform gives us no other handle; arbitrary values are not.
 2. **Use semantic roles, not colours.** Reference `surface` and
    `foreground`, never a hex or a raw OKLCH triple.
 3. **Never fade a text colour or a border with an opacity utility.** If a
@@ -139,11 +155,46 @@ UI pairs pass. Verified live at `/dev/design-system`.
 | `border` on `canvas` | 1.45 | 1.71 | n/a |
 | `border-strong` on `canvas` | 1.77 | 2.40 | n/a |
 
+Components put text on three further surfaces, so these pairs were added with
+the library. All pass.
+
+| Pair | Light | Dark | Required |
+|---|---|---|---|
+| `foreground` on `surface-sunken` | 12.07 | 14.98 | 4.5 |
+| `muted-foreground` on `surface-sunken` | 5.13 | 5.37 | 4.5 |
+| `walnut` on `surface-sunken` | 9.36 | 5.38 | 4.5 |
+| `foreground` on `surface-hover` | 11.35 | 11.35 | 4.5 |
+| `foreground` on `paper` | 13.58 | 13.18 | 4.5 |
+| `muted-foreground` on `paper` | 5.78 | 4.72 | 4.5 |
+| `thread` on `surface-sunken` | 3.76 | 5.82 | 3.0 (UI) |
+| `thread` on `surface-hover` | 3.54 | 4.41 | 3.0 (UI) |
+| `thread` on `paper` | 4.24 | 5.12 | 3.0 (UI) |
+
 Ratios are computed in sRGB. On a P3 display the terracottas render
 slightly more saturated; these values are the conservative case.
 
 **Any new colour pairing must be added to `CONTRAST_PAIRS` in
 `src/app/dev/design-system/page.tsx` so it is checked on every build.**
+
+### Forbidden pairings
+
+Surfaces step lighter as they lift, so in dark mode the **hover wash** is the
+lightest surface in the system — lighter than the raised surface every dark
+text token was solved against. The three quiet text tokens fall below AA on it.
+These combinations are therefore forbidden, and the reference page renders them
+with their measured ratios beside the rule, in `FORBIDDEN_PAIRS`.
+
+| Never pair | Light | Dark | Use instead |
+|---|---|---|---|
+| `muted-foreground` on `surface-hover` | 4.83 | **4.07** | Brighten to `foreground` under a wash |
+| `olive` on `surface-hover` | **4.17** | **4.07** | No status text on a hovered surface |
+| `walnut` on `surface-hover` | 8.80 | **4.08** | Walnut is structure, not a control label |
+| `olive` on `surface-sunken` | **4.43** | 5.37 | A neutral badge in wells and sidebars |
+
+The practical rules: **wash controls, not cards** — only elements whose text is
+`foreground` may take `bg-surface-hover`, and anything muted inside a washed
+container brightens to `foreground` as the wash arrives. Olive never sits in a
+well.
 
 ---
 
@@ -277,8 +328,28 @@ One hairline token at **full opacity**: `border-border`. `border-strong`
 for emphasis only. Do not apply opacity modifiers to borders.
 
 **Shadows are reserved for book covers**, where they represent a real
-object with weight. Nothing else in the system casts a shadow. No shadow
-tokens are defined; a cover shadow will be added when covers are built.
+object with weight. Nothing else in the system casts a shadow.
+
+### Depth
+
+Two tokens, added with the component library, and the only two places the flat
+page acquires a third dimension. Both are `color-mix` derivations of materials
+already in the palette — the same technique `::selection` already used — so
+neither introduces a hue.
+
+| Token | Utility | Light basis | Dark basis | Use |
+|---|---|---|---|---|
+| `--scrim` | `bg-scrim` | `walnut` at 55% | `surface-sunken` at 78% | The modal ground. `Dialog`, and nothing else. |
+| `--cover-shadow` | `shadow-cover` | `walnut` at 16% / 30% | `surface-sunken` at 65% / 85% | Book covers. Still the only shadow in the system. |
+
+Dark mode mixes from `surface-sunken` rather than `walnut`, because walnut is a
+*light* tone in dark mode: a walnut scrim would fog the page instead of dimming
+it.
+
+The scrim exists because a dialog has to be separated from the page somehow,
+and shadows are not available to lift it. `--scrim` is reached through
+Tailwind's `backdrop:` variant on the native `<dialog>` element
+(`backdrop:bg-scrim`).
 
 ---
 

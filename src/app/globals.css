@@ -64,6 +64,22 @@
   /* Materials — quiet, secondary, never competing with the thread */
   --olive: oklch(0.530 0.055 118);          /* #69704c  4.60:1  status text  */
   --walnut: oklch(0.360 0.045 58);          /* #4f3725  9.73:1  structure    */
+
+  /* Depth — the only two places the flat page acquires a third dimension.
+     Both are mixed down from existing materials, so neither introduces a
+     hue: the palette above is still the whole palette.
+
+     --scrim        the modal ground. A dialog cannot be modal without it,
+                    and shadows are reserved for covers, so separation has
+                    to come from dimming the page rather than lifting the
+                    panel. Warm, because it is dimming a warm room.
+     --cover-shadow a book has weight. This is the shadow the system always
+                    said it would add when covers were built, and it is
+                    still the only shadow in it. */
+  --scrim: color-mix(in oklch, var(--walnut) 55%, transparent);
+  --cover-shadow:
+    0 1px 2px color-mix(in oklch, var(--walnut) 16%, transparent),
+    0 8px 18px -8px color-mix(in oklch, var(--walnut) 30%, transparent);
 }
 
 
@@ -112,6 +128,14 @@
   /* Materials */
   --olive: oklch(0.624 0.050 118);          /* #848c6a  4.60:1 on surface */
   --walnut: oklch(0.630 0.035 58);          /* #9a8475  4.61:1 on surface */
+
+  /* Depth — walnut is a *light* tone in dark mode, so both values are mixed
+     from the sunken surface instead, the darkest tone in the room. A scrim
+     that lightened the page would be a fog, not a dimming. */
+  --scrim: color-mix(in oklch, var(--surface-sunken) 78%, transparent);
+  --cover-shadow:
+    0 1px 2px color-mix(in oklch, var(--surface-sunken) 65%, transparent),
+    0 8px 18px -8px color-mix(in oklch, var(--surface-sunken) 85%, transparent);
 }
 
 
@@ -142,6 +166,11 @@
 
   --color-olive: var(--olive);
   --color-walnut: var(--walnut);
+
+  --color-scrim: var(--scrim);
+
+  /* The one shadow in the system. `shadow-cover`, and only on a cover. */
+  --shadow-cover: var(--cover-shadow);
 }
 
 
