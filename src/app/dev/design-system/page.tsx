@@ -799,10 +799,11 @@ export default function DesignSystemPage() {
 
       <footer className="mt-section-lg border-t border-border pt-block">
         <p className="text-sm text-muted-foreground text-pretty">
-          Milestone 1: colour, typography, space, measure, shape and motion.
-          Milestone 2: the component library in section 08 — thirty reusable
-          primitives and two new depth tokens. No pages, no data layer, no
-          application functionality.
+          Milestone 1 is frozen: colour, typography, space, measure, shape and
+          motion. Milestone 2 is frozen: the component library in section 08 —
+          thirty reusable primitives and two depth tokens. No pages, no data
+          layer, no application functionality. The next milestone begins only
+          on explicit approval.
         </p>
       </footer>
     </div>

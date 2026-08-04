@@ -23,6 +23,14 @@ colour, size, space, radius, duration or easing curve of its own. If a
 component appears to need a value that does not exist, that is a signal to
 discuss the system — not to write a one-off value.
 
+**Milestone 2 is approved and the component library is frozen.** The thirty
+primitives in `src/components/`, their public API as recorded in
+[`components.md`](./components.md), and the thirteen-icon set are the
+vocabulary every screen is assembled from. Screens compose these components;
+they do not invent surfaces, hairlines or hover behaviours of their own. If a
+screen appears to need a component or a prop that does not exist, that is a
+signal to discuss the library — not to write a one-off.
+
 ### Change control
 
 The design system does not change unless **a usability issue requires it**.
@@ -47,9 +55,19 @@ When a change is warranted:
 5. Record the reason here if the underlying decision changed, not merely
    the value.
 
-Sections 1–16 below record the frozen decisions. Section 17 records the
-working principles that emerged while making them. Section 18 records the
-decisions made while building the component library on top of them.
+From Milestone 2 the same policy governs the component library. A prop,
+variant or behaviour changes — and a component is added — only against a
+need demonstrated on a real screen, never speculatively. When a library
+change is warranted: state the problem and the evidence, change the
+component, re-verify the catalogue at `/dev/design-system` section 08 and
+the three build checks, update [`components.md`](./components.md), and
+record the reason here if a decision changed rather than an implementation
+detail.
+
+Sections 1–16 below record the frozen foundation decisions. Section 17
+records the working principles that emerged while making them. Section 18
+records the decisions made while building the component library, frozen with
+Milestone 2. Section 19 records the questions deliberately left open.
 
 ### Changes made under this policy
 
@@ -517,6 +535,11 @@ before changing the colours.**
 
 ## 18. Milestone 2 — the component library
 
+**Status: approved and frozen.** See
+[Status](#status--the-design-foundation-is-frozen) for the change-control
+policy, which from this milestone governs the component API exactly as it
+governs the tokens.
+
 **Scope.** Thirty reusable primitives in `src/components/`, catalogued at
 `/dev/design-system` section 08, documented in
 [`components.md`](./components.md). No pages, no data layer, no application
@@ -599,6 +622,32 @@ controls, because iOS zooms the viewport when a focused field is smaller. That
 is a usability failure, not a preference — the exception the change-control
 policy exists to allow, recorded here rather than absorbed silently.
 
+### Scope boundary and freeze
+
+Milestone 2 delivered the component library only: thirty primitives, the
+thirteen-icon set, two sanctioned tokens (`--scrim`, `--cover-shadow`), the
+expanded catalogue at `/dev/design-system`, and
+[`components.md`](./components.md). Explicitly **not** in Milestone 2: pages
+(Home, Queue, Reader, Settings), the data layer, imports, exports, search,
+analytics, payments, authentication, a dark-mode toggle, and any application
+functionality.
+
+Two intentional exceptions stand at the freeze, both recorded rather than
+absorbed into a redesign of the APIs:
+
+1. **Form controls at 16px** — see above. Documented in
+   [`components.md`](./components.md#intentional-exceptions-at-freeze).
+2. **One arbitrary variant in `SearchInput`** —
+   `[&::-webkit-search-cancel-button]:appearance-none`, documented in
+   [`design-system.md`](./design-system.md#consumption-rules).
+
+Open questions that were deliberately not answered by inventing components or
+props are listed in [§19](#19-open-questions). None of them change the frozen
+API.
+
+The library is frozen at this boundary. The next milestone begins only on
+explicit approval.
+
 ---
 
 ## 19. Open questions
@@ -615,4 +664,12 @@ Carried forward, to be resolved before or during the milestones noted:
   thesis in one image and should be explored when Home is designed.
 - Whether to **enforce** the token system by removing Tailwind's default
   palette and larger radii, rather than merely documenting them as
-  out-of-system. Revisit once components exist to test against.
+  out-of-system. The components now exist and use nothing outside the
+  system; enforcement stays open until the first screens confirm nothing
+  legitimate is excluded.
+- **Remote cover hosts.** `BookCover` ships with no remote image patterns
+  configured — a privacy decision, not an oversight. Enable specific hosts
+  in `next.config.ts` when a metadata source is chosen.
+- **A labelled icon specimen.** The catalogue shows the thirteen icons only
+  inside the components that use them, so four never appear under their own
+  name. Worth a dedicated specimen if the set ever grows.

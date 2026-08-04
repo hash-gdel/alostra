@@ -15,8 +15,10 @@ lives in [`ux-decisions.md`](./ux-decisions.md).
 > were built. Both are mixed down from existing materials, so the palette is
 > unchanged. Nothing else moved.
 
-The components built on these tokens are documented in
-[`components.md`](./components.md).
+The component library built on these tokens is frozen with Milestone 2. Its
+public API — thirty primitives, the thirteen-icon set, and the two depth
+tokens above — is documented in [`components.md`](./components.md). Component
+APIs change only under the same change-control policy as the tokens.
 
 **Source of truth:** `src/app/globals.css`. This document mirrors it. If the
 two ever disagree, the CSS is correct and this file is stale.

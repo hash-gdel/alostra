@@ -12,8 +12,15 @@ read the file for the detail.
 rendered there in both light and dark, with its states. Hover, active and focus
 are live rather than pictured.
 
-> Design tokens are frozen. No component may introduce a colour, size, space,
-> radius, duration or easing curve of its own. See
+> **This library is frozen.** Milestone 2 is approved; the components and the
+> public API below are the vocabulary every screen is assembled from. A prop,
+> variant or behaviour changes — and a component is added — only against a
+> need demonstrated on a real screen, under the same change-control policy as
+> the tokens. See
+> [`ux-decisions.md`](./ux-decisions.md#status--the-design-foundation-is-frozen).
+>
+> Design tokens are frozen likewise. No component may introduce a colour,
+> size, space, radius, duration or easing curve of its own. See
 > [`design-system.md`](./design-system.md).
 
 ---
@@ -114,6 +121,51 @@ A closed set of line icons on one 20×20 grid at one stroke weight, in
 `HighlightIcon` `BookmarkIcon` `HomeIcon` `QueueIcon` `SettingsIcon`
 `InboxIcon`. They take `className` only; colour comes from `currentColor` and
 every icon is `aria-hidden`.
+
+---
+
+## Frozen public API
+
+Import from `@/components`. The barrel (`src/components/index.ts`) is the
+contract. Everything listed above is exported; `cn`, `styles` and `field` are
+not.
+
+| Surface | Exports |
+|---|---|
+| Foundation | `Button` `IconButton` `Input` `Textarea` `SearchInput` `Label` `Badge` `Divider` `Thread` `ProgressBar` `Skeleton` `EmptyState` |
+| Layout | `PageContainer` `ContentContainer` `ReadingContainer` `Card` `SectionHeading` |
+| Navigation | `SidebarItem` `MobileNavItem` `NavigationGroup` |
+| Reading | `BookCover` `BookCard` `ContinueReadingCard` `ReadingProgress` |
+| Content | `ArticleCard` `CaptureCard` `SourceIcon` |
+| Feedback | `Dialog` `ConfirmationDialog` `Toast` `ToastProvider` `useToast` |
+| Icons | the thirteen icons above, plus `IconProps` |
+
+Each component also exports its props type (`ButtonProps`, and so on). Variant
+unions that are part of the contract (`ButtonVariant`, `BadgeTone`,
+`BookCoverSize`, `SourceType`, …) are exported beside them. Adding a prop,
+variant or export is a library change and requires the change-control steps in
+[`ux-decisions.md`](./ux-decisions.md#status--the-design-foundation-is-frozen).
+
+---
+
+## Intentional exceptions at freeze
+
+Recorded here so they are not silently absorbed into the next screen:
+
+1. **Form controls are `text-base` (16px), not `text-sm` (14px).** iOS zooms
+   the viewport when a focused field is smaller than 16px. This is a usability
+   exception to the control size in the type scale, not a new token. See
+   [`ux-decisions.md` §18](./ux-decisions.md#18-milestone-2--the-component-library).
+2. **One arbitrary Tailwind variant** in `SearchInput` —
+   `[&::-webkit-search-cancel-button]:appearance-none` — to hide the browser's
+   native clear control so the field has a single clear affordance. Documented
+   in [`design-system.md`](./design-system.md#consumption-rules).
+
+Questions deliberately left open (shelf layout, Thread encoding, remote cover
+hosts, a labelled icon specimen, enforcing Tailwind defaults out of the build)
+live in
+[`ux-decisions.md` §19](./ux-decisions.md#19-open-questions). None of them
+change this API.
 
 ---
 

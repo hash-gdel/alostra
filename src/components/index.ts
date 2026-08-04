@@ -1,5 +1,5 @@
 /**
- * The Alostra component library.
+ * The Alostra component library. **Frozen with Milestone 2.**
  *
  * Import from `@/components`:
  *
@@ -11,6 +11,9 @@
  * reading, and nothing about any particular screen. Screens are assembled from
  * these; no screen should need to invent a surface, a hairline or a hover
  * behaviour of its own.
+ *
+ * The public API is documented in `docs/components.md`. A prop, variant or
+ * export changes only under the change-control policy in `docs/ux-decisions.md`.
  *
  * `cn.ts`, `styles.ts` and `field.tsx` are internal and deliberately not
  * exported — they are how the components share a rule, not part of the API.
