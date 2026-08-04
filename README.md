@@ -21,19 +21,6 @@ Keep your books, saved articles, and reading notes together in one calm, beautif
 # Reading has become fragmented.
 
 Today, every part of our reading life lives somewhere different.
-## Documentation
-
-- [`docs/design-system.md`](./docs/design-system.md) — the tokens, and the
-  rules for using them. Mirrors `src/app/globals.css`.
-- [`docs/components.md`](./docs/components.md) — the reusable component
-  library in `src/components/`.
-- [`docs/ux-decisions.md`](./docs/ux-decisions.md) — what we decided and why.
-
-`/dev/design-system` renders every token and every component, in both modes,
-and computes its contrast table from the real token definitions at build time.
-It is not linked from the application and is excluded from search indexing.
-
-## Development
 
 - 📚 Books are tracked in one app.
 - 🌐 Articles disappear into endless browser tabs.
@@ -158,7 +145,7 @@ Alostra is built with a modern web stack.
 - React
 - TypeScript
 - Tailwind CSS
-- IndexedDB (Dexie)
+- IndexedDB via Dexie *(planned — the reading data layer is not built yet)*
 - Vercel
 
 The application is designed to be:
@@ -183,9 +170,16 @@ The application is designed to be:
 
 ---
 
+## ✅ Milestone 2 — Component Library
+
+- Reusable UI components
+- Internal component catalogue
+- Component documentation
+
+---
+
 ## 🚧 In Progress
 
-- Core UI components
 - Home experience
 - Reading workspace
 
@@ -212,7 +206,7 @@ Screenshots will be added as the application approaches its first public preview
 Clone the repository.
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/alostra.git
+git clone https://github.com/hash-gdel/alostra.git
 npm install
 ```
 
@@ -229,3 +223,17 @@ npm run lint
 npx tsc --noEmit
 npm run build
 ```
+
+---
+
+# Documentation
+
+- [`docs/design-system.md`](./docs/design-system.md) — the tokens, and the
+  rules for using them. Mirrors `src/app/globals.css`.
+- [`docs/components.md`](./docs/components.md) — the reusable component
+  library in `src/components/`.
+- [`docs/ux-decisions.md`](./docs/ux-decisions.md) — what we decided and why.
+
+`/dev/design-system` renders every token and every component, in both modes,
+and computes its contrast table from the real token definitions at build time.
+It is not linked from the application and is excluded from search indexing.
