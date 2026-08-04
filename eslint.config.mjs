@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Read-only v0 design reference. Not part of the application and never
+    // edited, built or imported from.
+    "alostra_v0/**",
   ]),
 ]);
 

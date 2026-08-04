@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Temporary Alostra mark: a page edge with the bookmark thread beside it.
+       Placeholder for a properly drawn wordmark in a later milestone. -->
+  <rect width="32" height="32" rx="7" fill="#241c17" />
+  <rect x="10" y="7.5" width="5" height="17" rx="2.5" fill="#f2ece1" />
+  <rect x="19" y="5.5" width="2.5" height="21" rx="1.25" fill="#c2653e" />
+</svg>

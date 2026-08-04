@@ -1,26 +1,316 @@
-@import "tailwindcss";
+/* `source("../")` scopes class detection to `src/`. Without it Tailwind
+   scans the whole repository, which meant the read-only `alostra_v0/`
+   prototype and the class names quoted in `docs/` were both generating
+   utilities into the production stylesheet. */
+@import "tailwindcss" source("../");
+
+/* Dark mode is driven by an explicit `.dark` class, never by the OS
+   preference. The token layer below swaps on the same class, so utilities
+   and tokens can never disagree about which mode is active. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ============================================================================
+   ALOSTRA — DESIGN FOUNDATION
+   ----------------------------------------------------------------------------
+   The single source of truth for colour, type, space, shape and motion.
+
+   Principles
+     · Restraint over decoration. Luxury comes from proportion, not effect.
+     · Every value here is named. Components should not invent values.
+     · Terracotta is reserved. It marks your place and nothing else.
+
+   Colour is authored in OKLCH so that lightness can be re-mapped for dark
+   mode without hue drift. Contrast ratios in the comments are measured
+   against the worst-case surface for that mode and are verified live at
+   /dev/design-system.
+   ============================================================================ */
+
+
+/* ----------------------------------------------------------------------------
+   1. SEMANTIC COLOUR — LIGHT
+   Daylight on cream paper. Surfaces step *lighter* as they lift off the page.
+   Worst case for text is the canvas, the darkest of the three surfaces.
+   ---------------------------------------------------------------------------- */
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  /* Surfaces */
+  --canvas: oklch(0.958 0.014 83);          /* #f6f0e7  page ground          */
+  --surface: oklch(0.982 0.011 86);         /* #fcf9f1  cards, raised panels */
+  --surface-sunken: oklch(0.945 0.016 82);  /* #f2ece1  sidebar, wells       */
+  --surface-hover: oklch(0.925 0.018 78);   /* #ede5d9  quiet hover wash     */
+  --paper: oklch(0.985 0.010 88);           /* #fdfaf3  reading surface only */
+
+  /* Text */
+  --foreground: oklch(0.290 0.021 58);         /* #342921  12.54:1 on canvas */
+  --muted-foreground: oklch(0.500 0.028 66);   /* #6f6053   5.34:1 on canvas */
+
+  /* Structure — hairlines, used at full opacity. Never fade a border. */
+  --border: oklch(0.840 0.018 74);          /* #d2c9be  1.45:1 vs canvas */
+  --border-strong: oklch(0.780 0.020 72);   /* #c0b6aa  emphasis rules   */
+
+  /* Action — terracotta darkened until its label clears AA.
+     This is the only fill in the system that carries text. */
+  --action: oklch(0.562 0.128 42);            /* #b25833  4.60:1 w/ label */
+  --action-hover: oklch(0.512 0.128 42);      /* #a14923  5.69:1 w/ label */
+  --action-foreground: oklch(0.980 0.012 85); /* #fcf8f0                  */
+
+  /* The Bookmark Thread — the signature motif.
+     A non-text UI mark, so it is tuned for presence (needs 3:1, has 3.91:1)
+     rather than legibility. Deliberately a shade more open than --action. */
+  --thread: oklch(0.585 0.128 42);          /* #b95e3a  3.91:1 vs canvas */
+
+  /* Materials — quiet, secondary, never competing with the thread */
+  --olive: oklch(0.530 0.055 118);          /* #69704c  4.60:1  status text  */
+  --walnut: oklch(0.360 0.045 58);          /* #4f3725  9.73:1  structure    */
 }
+
+
+/* ----------------------------------------------------------------------------
+   2. SEMANTIC COLOUR — DARK
+   A lamp-lit reading room, not a dark dashboard. Chroma is retained in every
+   neutral so the warmth survives; nothing here is grey.
+
+   Surfaces step *lighter* as they lift, which inverts the contrast maths:
+   the worst case for text is --surface, not --canvas. Every text value below
+   is solved against --surface.
+
+   ARCHITECTURE ONLY (Milestone 1). These tokens are complete and correct, but
+   `.dark` is not applied to the document and there is no user-facing toggle.
+   Scope the class to a subtree to preview it.
+   ---------------------------------------------------------------------------- */
+
+.dark {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --canvas: oklch(0.205 0.012 60);          /* #1b1612  page ground          */
+  --surface: oklch(0.245 0.013 60);         /* #251f1a  cards, raised panels */
+  --surface-sunken: oklch(0.175 0.010 58);  /* #140f0c  sidebar, wells       */
+  --surface-hover: oklch(0.285 0.014 62);   /* #2f2923  quiet hover wash     */
+  --paper: oklch(0.235 0.012 62);           /* #221d18  reading surface only */
+
+  /* Text */
+  --foreground: oklch(0.920 0.012 82);         /* #e9e4dc  12.83:1 on surface */
+  --muted-foreground: oklch(0.628 0.016 70);   /* #8f877e   4.60:1 on surface */
+
+  /* Structure */
+  --border: oklch(0.370 0.014 62);          /* #453e38  1.55:1 vs surface */
+  --border-strong: oklch(0.450 0.016 62);   /* #5c534c  emphasis rules    */
+
+  /* Action — inverted strategy. On a dark ground a *light* terracotta fill
+     with a dark label reads strongly both against the page and within itself,
+     where a dark fill would disappear into the background. */
+  --action: oklch(0.720 0.115 45);            /* #e08c66  7.24:1 w/ label */
+  --action-hover: oklch(0.770 0.105 45);      /* #ec9f7c  8.71:1 w/ label */
+  --action-foreground: oklch(0.185 0.014 58); /* #18110d                  */
+
+  /* The Bookmark Thread — lifted so it still glows against the dark room */
+  --thread: oklch(0.660 0.125 42);          /* #d17652  5.50:1 vs canvas */
+
+  /* Materials */
+  --olive: oklch(0.624 0.050 118);          /* #848c6a  4.60:1 on surface */
+  --walnut: oklch(0.630 0.035 58);          /* #9a8475  4.61:1 on surface */
+}
+
+
+/* ----------------------------------------------------------------------------
+   3. TOKEN → UTILITY MAPPING
+   `inline` keeps the var() reference at the use site so that any subtree
+   carrying `.dark` resolves to the dark value through normal cascade.
+   ---------------------------------------------------------------------------- */
 
 @theme inline {
-  --color-background: var(--background);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-hover: var(--surface-hover);
+  --color-paper: var(--paper);
+
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-action: var(--action);
+  --color-action-hover: var(--action-hover);
+  --color-action-foreground: var(--action-foreground);
+
+  --color-thread: var(--thread);
+
+  --color-olive: var(--olive);
+  --color-walnut: var(--walnut);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+
+/* ----------------------------------------------------------------------------
+   4. TYPOGRAPHY
+   Two families with strict, separate jobs.
+
+     Fraunces (serif)  — content the user came for:
+                         section headings, book and article titles,
+                         long-form reading, quotations inside captures.
+     Geist (sans)      — the machinery around it:
+                         navigation, buttons, forms, filters, labels,
+                         metadata, system messages.
+
+   Fraunces is a variable serif with an optical-size axis. We request `opsz`
+   and let `font-optical-sizing: auto` drive it, so display sizes gain
+   contrast and small sizes stay sturdy. SOFT and WONK are deliberately left
+   at their defaults — we are not paying to download axes we will not use.
+
+   Type scale: eight steps, ~1.2 ratio, each paired with a line height.
+   Reading sizes are a separate, larger pair used only by the reader.
+   ---------------------------------------------------------------------------- */
+
+@theme {
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-fraunces), "Iowan Old Style", Georgia, serif;
+
+  --text-2xs: 0.6875rem;              /* 11px  micro labels, eyebrows      */
+  --text-2xs--line-height: 1.45;
+  --text-xs: 0.75rem;                 /* 12px  metadata, counts            */
+  --text-xs--line-height: 1.5;
+  --text-sm: 0.875rem;                /* 14px  secondary body, controls    */
+  --text-sm--line-height: 1.55;
+  --text-base: 1rem;                  /* 16px  default body                */
+  --text-base--line-height: 1.6;
+  --text-lg: 1.125rem;                /* 18px  lead paragraphs, quotations */
+  --text-lg--line-height: 1.55;
+  --text-xl: 1.375rem;                /* 22px  section headings            */
+  --text-xl--line-height: 1.4;
+  --text-2xl: 1.75rem;                /* 28px  book / article titles       */
+  --text-2xl--line-height: 1.3;
+  --text-3xl: 2.25rem;                /* 36px  page titles — the largest   */
+  --text-3xl--line-height: 1.2;
+
+  --text-reading: 1.1875rem;          /* 19px  the reader, and only there  */
+  --text-reading--line-height: 1.72;
+
+  /* Three tracking values. Display tightens, body is neutral,
+     label is the single sanctioned small-caps treatment. */
+  --tracking-display: -0.018em;
+  --tracking-body: 0em;
+  --tracking-label: 0.14em;
+}
+
+
+/* ----------------------------------------------------------------------------
+   5. SPACE, MEASURE, SHAPE, MOTION
+   ---------------------------------------------------------------------------- */
+
+@theme {
+  /* --- Spacing -------------------------------------------------------------
+     Base unit is 4px, giving the full numeric ramp (p-1 = 4px, p-6 = 24px).
+     On top of it sit five named rhythm tokens. Use the named token whenever
+     the value expresses page rhythm rather than local padding, so that the
+     rhythm can be retuned in one place. */
+  --spacing: 0.25rem;
+
+  --spacing-gutter: 1.5rem;         /* 24px  page gutter, small screens     */
+  --spacing-gutter-lg: 2.5rem;      /* 40px  page gutter, large screens     */
+  --spacing-block: 2rem;            /* 32px  between blocks within a section*/
+  --spacing-section: 4rem;          /* 64px  between sections               */
+  --spacing-section-lg: 5rem;       /* 80px  between sections, large screens*/
+
+  /* --- Measure -------------------------------------------------------------
+     Three widths, because reading and browsing are different activities and
+     must not share a container.
+
+       reading  — ~66 characters at --text-reading. The reader, and prose.
+       content  — a single column of mixed content. Home, detail pages.
+       library  — browsing grids. Shelves want room; paragraphs do not. */
+  --container-reading: 38rem;       /* 608px */
+  --container-content: 48rem;       /* 768px */
+  --container-library: 75rem;       /* 1200px */
+
+  /* --- Radius --------------------------------------------------------------
+     Three, and only three. Tailwind's larger defaults remain reachable but
+     are not part of the system; anything softer than `lg` reads as SaaS.
+     There is no pill radius by design. */
+  --radius-sm: 0.25rem;             /* 4px   tags, small controls        */
+  --radius-md: 0.5rem;              /* 8px   buttons, inputs, nav items  */
+  --radius-lg: 0.875rem;            /* 14px  cards, panels, sheets       */
+
+  /* --- Motion --------------------------------------------------------------
+     Three durations and two curves. The interface should feel settled on
+     arrival, so there are no entrance animations in this system: nothing
+     rises, fades in, or staggers on page load.
+
+       quick  — hover, colour, opacity. Below the threshold of attention.
+       state  — a real state change. The thread extending. A panel opening.
+       enter  — an element genuinely arriving. The ceiling, rarely reached.
+
+       standard — decelerating. Everything.
+       accent   — a slight overshoot, reserved for the single tactile
+                  acknowledgement of a capture being saved. Used anywhere
+                  else it stops meaning anything. */
+  --duration-quick: 120ms;
+  --duration-state: 200ms;
+  --duration-enter: 320ms;
+
+  --ease-standard: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-accent: cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+
+/* ----------------------------------------------------------------------------
+   6. BASE
+   ---------------------------------------------------------------------------- */
+
+@layer base {
+  html {
+    background-color: var(--canvas);
   }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    background-color: var(--canvas);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    letter-spacing: var(--tracking-body);
+    /* The canvas is flat and evenly lit. No gradient, no texture, no
+       simulated light source — a well-made page, not a photograph of one. */
+    font-feature-settings: "liga" 1, "calt" 1, "kern" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* The serif carries content, so it gets the editorial detailing:
+     optical sizing, oldstyle figures in running text, discretionary
+     ligatures. Tabular figures are opted into per-component where numbers
+     need to align. */
+  .font-serif {
+    font-optical-sizing: auto;
+    font-feature-settings: "liga" 1, "dlig" 1, "onum" 1, "kern" 1;
+  }
+
+  /* Selection reads as a highlighter laid over the text — the same gesture
+     the product is built around. */
+  ::selection {
+    background-color: color-mix(in oklch, var(--thread) 22%, transparent);
+    color: var(--foreground);
+  }
+
+  /* One focus treatment everywhere: the thread, offset off the element.
+     Visible on any surface in either mode, and never shifts layout. */
+  :focus-visible {
+    outline: 2px solid var(--thread);
+    outline-offset: 2px;
+  }
+
+  /* Nothing in this system depends on animation to become usable or to
+     communicate state, so honouring the preference costs the user nothing. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
