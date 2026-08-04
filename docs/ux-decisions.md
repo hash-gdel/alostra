@@ -48,7 +48,26 @@ When a change is warranted:
    the value.
 
 Sections 1–16 below record the frozen decisions. Section 17 records the
-working principles that emerged while making them.
+working principles that emerged while making them. Section 18 records the
+decisions made while building the component library on top of them.
+
+### Changes made under this policy
+
+**Milestone 2 — two additions, no changes.** Both were justified by a
+demonstrated gap, both are `color-mix` derivations of existing materials, and
+the palette itself is untouched.
+
+| Addition | Problem | Evidence |
+|---|---|---|
+| `--scrim` | A dialog has to be separated from the page and marked as modal. Shadows are reserved for covers, so lifting the panel was not available; the page had to be dimmed instead. | Building `Dialog`. Without a scrim, a modal panel is indistinguishable from an inline one. |
+| `--cover-shadow` | A book cover is a real object with weight. | Anticipated by the system: `design-system.md` already stated a cover shadow would be added when covers were built. |
+
+**Milestone 2 — one failure found, fixed without touching a token.** The dark
+hover wash is the lightest surface in the system, so `muted-foreground`,
+`olive` and `walnut` all fall below AA on it (4.07, 4.07, 4.08). This is the
+same class of near-miss as the original dark-mode solve, one surface further
+on. It was resolved in the components rather than in the palette — see
+[§18](#18-milestone-2--the-component-library).
 
 ### Pre-freeze audit
 
@@ -406,11 +425,12 @@ Dark mode is **architecture only** — the tokens are complete and verified,
 but `.dark` is not applied to the document and there is no user-facing
 toggle.
 
-`alostra_v0/` is a **read-only reference**. It is never edited, built or
-imported from.
+`alostra_v0/` was a **read-only reference**: never edited, built or imported
+from. It was verified to have no imports, dependencies, assets or copied files
+reaching into it, and was then deleted.
 
-The foundation is frozen at this boundary. Milestone 2 (primitives) begins
-only on explicit approval.
+The foundation is frozen at this boundary. Milestone 2 (primitives) began on
+explicit approval and is recorded in [§18](#18-milestone-2--the-component-library).
 
 ---
 
@@ -495,7 +515,93 @@ before changing the colours.**
 
 ---
 
-## 18. Open questions
+## 18. Milestone 2 — the component library
+
+**Scope.** Thirty reusable primitives in `src/components/`, catalogued at
+`/dev/design-system` section 08, documented in
+[`components.md`](./components.md). No pages, no data layer, no application
+functionality. A component that would only ever be used once is not a
+primitive and was not built.
+
+### The dark hover wash was an AA failure waiting to happen
+
+Milestone 1 solved every dark text colour against `surface`, having correctly
+identified it as lighter than `canvas`. But `surface-hover` is lighter still —
+it is the lightest surface in the system — and `muted-foreground` measures only
+**4.07:1** against it. So does olive, and so does walnut. Metadata under a
+hover wash is not an edge case: it is every card and every navigation row in
+the product.
+
+Two ways out. Re-solve three dark tokens against the true worst case, or design
+the components so the pairing never occurs. We chose the components, because the
+palette is frozen and the constraint turned out to be a *better* interface
+rather than a compromise:
+
+- **Wash controls, not cards.** Buttons, icon buttons and navigation rows —
+  whose text is `foreground` at 11.35:1 — keep the wash. Cards do not; an
+  interactive card firms its hairline to `border-strong` instead. This is
+  quieter than a wash, which suits a product whose interactions are meant to be
+  quiet.
+- **Muted text brightens under a wash.** A sidebar count moves from
+  `muted-foreground` to `foreground` as the wash arrives, which is both AA-safe
+  and a better hover: the row you are pointing at becomes more legible, not
+  merely tinted.
+
+The failing ratios are now rendered *on the reference page* beside the rule they
+justify, computed from the tokens like everything else. A rule with the number
+next to it is a rule people believe.
+
+### Restraint held where it was tested
+
+Four places where the obvious component pattern was rejected because the system
+already had an answer:
+
+- **No spinner.** Reduced motion is honoured globally, which would freeze a
+  spinner mid-turn. `loading` swaps the label and sets `aria-busy`.
+- **No shimmer.** Skeletons are static blocks. A pulsing gradient is exactly the
+  decorative effect this system spends its restraint avoiding.
+- **No red.** Invalid fields and destructive confirmations carry their weight in
+  words, `aria-invalid` and a stronger hairline. Naming the verb on the button
+  (`"Delete book"`, never `"OK"`) does more than colouring it ever would.
+- **No fading.** A disabled control drops to the sunken surface and keeps a
+  hairline, rather than being an opacity-reduced copy of itself.
+
+### The platform does the hard parts
+
+`Dialog` is the native `<dialog>` element with `showModal()`, which brings the
+top layer, focus containment, page inertness and Escape. A hand-rolled focus
+trap is a bug waiting to happen, and this product cannot afford to be the app
+where keyboard users get stuck behind a modal.
+
+### Privacy is a component-level decision, not a policy page
+
+`SourceIcon` draws its own marks rather than fetching favicons: a favicon
+request tells a website what its reader is reading, from that reader's own
+device. `BookCover` does not enable remote image hosts until a metadata source
+is chosen. These are the kind of leaks that arrive by convenience, one
+component at a time.
+
+### Composition kept the library small
+
+`BookCard`, `ArticleCard`, `CaptureCard` and `ContinueReadingCard` are all
+`Card` plus existing parts, so the panel, hairline and hover behaviour exist
+once. `ReadingProgress` is `ProgressBar` plus the product's wording.
+`IconButton` shares `Button`'s variant and geometry maps rather than restating
+them. The three containers are one implementation with three widths. Where two
+components looked unifiable and were not — `SidebarItem` and `MobileNavItem` —
+the anatomy genuinely differs, and what they share (the meaning of "active") is
+expressed identically in both.
+
+### One deliberate typographic exception
+
+Form controls are set at 16px rather than the 14px the system assigns to
+controls, because iOS zooms the viewport when a focused field is smaller. That
+is a usability failure, not a preference — the exception the change-control
+policy exists to allow, recorded here rather than absorbed silently.
+
+---
+
+## 19. Open questions
 
 Carried forward, to be resolved before or during the milestones noted:
 
