@@ -67,7 +67,9 @@ detail.
 Sections 1–16 below record the frozen foundation decisions. Section 17
 records the working principles that emerged while making them. Section 18
 records the decisions made while building the component library, frozen with
-Milestone 2. Section 19 records the questions deliberately left open.
+Milestone 2. Section 19 records questions deliberately left open. Section 20
+records Milestone 3 (data and library). Persistence details live in
+[`data.md`](./data.md).
 
 ### Changes made under this policy
 
@@ -660,16 +662,45 @@ Carried forward, to be resolved before or during the milestones noted:
   recency — to deliver reading activity without ever building a dashboard.
   Deferred.
 - **Unifying articles and books typographically**, e.g. an article as a
-  slim pamphlet spine on the same shelf. This communicates the product
-  thesis in one image and should be explored when Home is designed.
+  slim pamphlet spine on the same shelf. Home now exists as a calm list and
+  continue card; a shared shelf language remains open.
 - Whether to **enforce** the token system by removing Tailwind's default
   palette and larger radii, rather than merely documenting them as
-  out-of-system. The components now exist and use nothing outside the
-  system; enforcement stays open until the first screens confirm nothing
-  legitimate is excluded.
+  out-of-system. First screens now exist; revisit once the library and home
+  layouts have settled under real use.
 - **Remote cover hosts.** `BookCover` ships with no remote image patterns
-  configured — a privacy decision, not an oversight. Enable specific hosts
-  in `next.config.ts` when a metadata source is chosen.
+  configured — a privacy decision, not an oversight. Milestone 3 stores
+  optional cover URLs but only renders same-origin paths; `http(s)` URLs use
+  the fallback plate until hosts are chosen in `next.config.ts`.
 - **A labelled icon specimen.** The catalogue shows the thirteen icons only
   inside the components that use them, so four never appear under their own
   name. Worth a dedicated specimen if the set ever grows.
+- **Native select.** Milestone 3 needed status and source pickers. There is no
+  Select primitive in the frozen library; app-local native `<select>` fields
+  were used instead of expanding the component API. Promote only if screens
+  keep needing the same control.
+
+---
+
+## 20. Milestone 3 — data and library
+
+**Status: in progress / under review.** Milestones 1 and 2 remain frozen.
+
+Milestone 3 delivers the smallest robust local data foundation and the first
+user-facing library experience:
+
+- IndexedDB via Dexie (`alostra`, schema version 1)
+- Domain types and repositories for books, articles and captures
+- Application shell (Home, Library, Captures)
+- Home populated from real local data
+- Unified library with filters, search, add/edit/delete
+- Captures attached to books or articles
+- Book progress rules and validation
+- Empty-database sample seed with a clear-sample action
+
+Exact schema, progress rules and search behaviour:
+[`data.md`](./data.md).
+
+Explicitly **not** in Milestone 3: article extraction, in-app article reading,
+highlighting, Goodreads/Notion/Markdown import or export, cloud sync,
+authentication, payments, analytics, notifications, or reading guidance.

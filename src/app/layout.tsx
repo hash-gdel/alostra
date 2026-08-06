@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Geist } from "next/font/google";
+import { Providers } from "./providers";
 import "./globals.css";
 
 /* Content: headings, titles, reading, quotations.
@@ -42,7 +43,9 @@ export default function RootLayout({
       lang="en"
       className={`${geist.variable} ${fraunces.variable} h-full antialiased`}
     >
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

@@ -145,7 +145,7 @@ Alostra is built with a modern web stack.
 - React
 - TypeScript
 - Tailwind CSS
-- IndexedDB via Dexie *(planned — the reading data layer is not built yet)*
+- IndexedDB via Dexie
 - Vercel
 
 The application is designed to be:
@@ -178,19 +178,20 @@ The application is designed to be:
 
 ---
 
-## 🚧 In Progress
+## 🚧 Milestone 3 — Data and Library
 
-- Home experience
-- Reading workspace
+- Local IndexedDB data layer
+- Home from real device data
+- Unified library (books and articles)
+- Captures
+- Search and reading progress
 
 ---
 
 ## 🔜 Coming Soon
 
-- Books
-- Articles
-- Captures
-- Reading progress
+- Article reading and highlighting
+- Imports and exports
 - Public Preview
 
 ---
@@ -221,6 +222,7 @@ Before completing a milestone:
 ```bash
 npm run lint
 npx tsc --noEmit
+npm test
 npm run build
 ```
 
@@ -232,6 +234,7 @@ npm run build
   rules for using them. Mirrors `src/app/globals.css`.
 - [`docs/components.md`](./docs/components.md) — the reusable component
   library in `src/components/`.
+- [`docs/data.md`](./docs/data.md) — domain model, Dexie schema, persistence.
 - [`docs/ux-decisions.md`](./docs/ux-decisions.md) — what we decided and why.
 
 `/dev/design-system` renders every token and every component, in both modes,
