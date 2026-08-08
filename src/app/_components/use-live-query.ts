@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 /**
- * Load IndexedDB (or any async source) into React state.
+ * Load an async data source into React state.
  * State updates happen only after the promise settles, which keeps the
  * react-hooks/set-state-in-effect rule happy while still refreshing on deps.
  */

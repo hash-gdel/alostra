@@ -92,7 +92,7 @@ export default function LibraryPage() {
             description={
               query
                 ? "Try a different word, or clear the search."
-                : "Add a book or an article. What you save stays on this device."
+                : "Add a book or an article. What you save stays private to your account."
             }
             action={
               query ? (

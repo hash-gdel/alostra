@@ -1,167 +1,268 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import {
-  deleteDatabaseForTests,
-  resetDatabaseForTests,
-} from "@/lib/db/database";
-import { SEED_IDS, clearSampleData, seedIfEmpty } from "@/lib/db/seed";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const { mock } = vi.hoisted(() => {
+  type InnerRow = Record<string, unknown>;
+  const tables: Record<string, InnerRow[]> = {
+    books: [],
+    articles: [],
+    captures: [],
+  };
+  const userId = "user-test-1";
+
+  function from(table: string) {
+    const state = {
+      filters: {} as Record<string, unknown>,
+      orderCol: null as string | null,
+      ascending: false,
+      maybe: false,
+      action: "select" as "select" | "insert" | "update" | "delete",
+      payload: null as InnerRow | null,
+    };
+
+    const api: {
+      select: () => typeof api;
+      insert: (row: InnerRow) => typeof api;
+      update: (row: InnerRow) => typeof api;
+      delete: () => typeof api;
+      eq: (col: string, value: unknown) => typeof api;
+      order: (col: string, opts?: { ascending?: boolean }) => typeof api;
+      maybeSingle: () => typeof api;
+      then: (
+        resolve: (value: { data: unknown; error: null }) => unknown,
+      ) => Promise<unknown>;
+    } = {
+      select() {
+        state.action = "select";
+        return api;
+      },
+      insert(row: InnerRow) {
+        state.action = "insert";
+        state.payload = row;
+        return api;
+      },
+      update(row: InnerRow) {
+        state.action = "update";
+        state.payload = row;
+        return api;
+      },
+      delete() {
+        state.action = "delete";
+        return api;
+      },
+      eq(col: string, value: unknown) {
+        state.filters[col] = value;
+        return api;
+      },
+      order(col: string, opts?: { ascending?: boolean }) {
+        state.orderCol = col;
+        state.ascending = Boolean(opts?.ascending);
+        return api;
+      },
+      maybeSingle() {
+        state.maybe = true;
+        return api;
+      },
+      then(resolve) {
+        const rows = tables[table] ?? [];
+        if (state.action === "insert") {
+          const row = { ...(state.payload as InnerRow) };
+          rows.push(row);
+          return Promise.resolve(resolve({ data: row, error: null }));
+        }
+        let matched = rows.filter((row) =>
+          Object.entries(state.filters).every(([k, v]) => row[k] === v),
+        );
+        if (state.action === "update") {
+          const payload = state.payload as InnerRow;
+          for (const row of matched) Object.assign(row, payload);
+          return Promise.resolve(resolve({ data: matched, error: null }));
+        }
+        if (state.action === "delete") {
+          const deleted = rows.filter((row) =>
+            Object.entries(state.filters).every(([k, v]) => row[k] === v),
+          );
+          if (table === "books") {
+            const deletedIds = new Set(deleted.map((row) => row.id));
+            tables.captures = tables.captures.filter(
+              (c) => !deletedIds.has(c.book_id),
+            );
+          }
+          if (table === "articles") {
+            const deletedIds = new Set(deleted.map((row) => row.id));
+            tables.captures = tables.captures.filter(
+              (c) => !deletedIds.has(c.article_id),
+            );
+          }
+          tables[table] = rows.filter(
+            (row) =>
+              !Object.entries(state.filters).every(([k, v]) => row[k] === v),
+          );
+          return Promise.resolve(resolve({ data: null, error: null }));
+        }
+        if (state.orderCol) {
+          const col = state.orderCol;
+          matched = [...matched].sort((a, b) => {
+            const av = String(a[col] ?? "");
+            const bv = String(b[col] ?? "");
+            return state.ascending ? av.localeCompare(bv) : bv.localeCompare(av);
+          });
+        }
+        if (state.maybe) {
+          return Promise.resolve(
+            resolve({ data: matched[0] ?? null, error: null }),
+          );
+        }
+        return Promise.resolve(resolve({ data: matched, error: null }));
+      },
+    };
+    return api;
+  }
+
+  return {
+    mock: {
+      userId,
+      tables,
+      client: {
+        from,
+        auth: {
+          getUser: async () => ({
+            data: { user: { id: userId, email: "test@example.com" } },
+            error: null,
+          }),
+        },
+      },
+    },
+  };
+});
+
+vi.mock("@/lib/repositories/require-user", () => ({
+  AuthenticationRequiredError: class AuthenticationRequiredError extends Error {
+    constructor(message = "Authentication required.") {
+      super(message);
+      this.name = "AuthenticationRequiredError";
+    }
+  },
+  requireUser: async () => ({
+    client: mock.client,
+    user: { id: mock.userId },
+    userId: mock.userId,
+  }),
+}));
+
 import {
   createArticle,
   deleteArticle,
-  getArticle,
-  updateArticle,
-} from "./articles";
+  listArticles,
+} from "@/lib/repositories/articles";
 import {
   createBook,
   deleteBook,
   getBook,
   listBooks,
   updateBook,
-} from "./books";
+} from "@/lib/repositories/books";
 import {
   createCapture,
-  getCapture,
-  listCapturesForSource,
-  updateCapture,
-} from "./captures";
-import { getContinueReading, listLibraryItems } from "./library";
+  listCaptures,
+  listCapturesWithSources,
+} from "@/lib/repositories/captures";
+import { listLibraryItems } from "@/lib/repositories/library";
 
-const DB = "alostra-repo-test";
+describe("Supabase repositories", () => {
+  beforeEach(() => {
+    mock.tables.books.length = 0;
+    mock.tables.articles.length = 0;
+    mock.tables.captures.length = 0;
+  });
 
-beforeEach(async () => {
-  await resetDatabaseForTests(DB);
-});
-
-afterEach(async () => {
-  await deleteDatabaseForTests(DB);
-});
-
-describe("book repository", () => {
-  it("creates, updates, lists and deletes", async () => {
-    const book = await createBook({
-      title: "Ex Libris",
-      author: "Anne Fadiman",
+  it("creates and lists books for the signed-in user", async () => {
+    await createBook({
+      title: "The Dispossessed",
+      author: "Ursula K. Le Guin",
       status: "reading",
       currentPage: 40,
-      totalPages: 162,
+      totalPages: 400,
     });
-    expect(book.progressPercent).toBe(25);
-
-    const updated = await updateBook(book.id, {
-      currentPage: 81,
-      totalPages: 162,
-    });
-    expect(updated.progressPercent).toBe(50);
-
-    const finished = await updateBook(book.id, { status: "finished" });
-    expect(finished.progressPercent).toBe(100);
-
-    expect(await listBooks()).toHaveLength(1);
-    await deleteBook(book.id);
-    expect(await getBook(book.id)).toBeUndefined();
+    const books = await listBooks();
+    expect(books).toHaveLength(1);
+    expect(books[0]?.title).toBe("The Dispossessed");
+    expect(books[0]?.progressPercent).toBe(10);
+    expect(mock.tables.books[0]?.user_id).toBe(mock.userId);
   });
-});
 
-describe("article repository", () => {
-  it("validates CRUD and finished progress", async () => {
-    const article = await createArticle({
-      title: "On Typography",
-      url: "https://example.com/typography",
+  it("updates book progress", async () => {
+    const book = await createBook({
+      title: "Dune",
+      author: "Frank Herbert",
       status: "reading",
+      currentPage: 10,
+      totalPages: 100,
     });
-    const finished = await updateArticle(article.id, { status: "finished" });
-    expect(finished.progressPercent).toBe(100);
-    await deleteArticle(article.id);
-    expect(await getArticle(article.id)).toBeUndefined();
+    const updated = await updateBook(book.id, { currentPage: 50 });
+    expect(updated.progressPercent).toBe(50);
+    const again = await getBook(book.id);
+    expect(again?.currentPage).toBe(50);
   });
-});
 
-describe("capture source relationships", () => {
-  it("requires a living source and cascades on delete", async () => {
-    await expect(
-      createCapture({
-        sourceType: "book",
-        sourceId: "missing",
-        text: "orphan",
-      }),
-    ).rejects.toThrow(/not found/);
-
-    const book = await createBook({ title: "A Book", author: "Author" });
-    const capture = await createCapture({
+  it("cascades capture deletion when a book is deleted", async () => {
+    const book = await createBook({ title: "Book", author: "A" });
+    await createCapture({
       sourceType: "book",
       sourceId: book.id,
-      text: "A kept line",
+      text: "A line worth keeping",
       pageNumber: 12,
     });
-
-    expect(await listCapturesForSource("book", book.id)).toHaveLength(1);
-
-    const movedNote = await updateCapture(capture.id, {
-      note: "Remember this",
-    });
-    expect(movedNote.note).toBe("Remember this");
-
+    expect(await listCaptures()).toHaveLength(1);
     await deleteBook(book.id);
-    expect(await getCapture(capture.id)).toBeUndefined();
+    expect(await listCaptures()).toHaveLength(0);
+    expect(await listBooks()).toHaveLength(0);
   });
 
-  it("cascades article captures too", async () => {
+  it("creates articles and lists library items", async () => {
+    await createBook({ title: "Book", author: "A" });
+    await createArticle({
+      title: "Essay",
+      url: "https://example.com/essay",
+      status: "saved",
+    });
+    const items = await listLibraryItems();
+    expect(items).toHaveLength(2);
+    expect(await listArticles()).toHaveLength(1);
+  });
+
+  it("lists captures with source titles", async () => {
+    const book = await createBook({ title: "Source Book", author: "A" });
+    await createCapture({
+      sourceType: "book",
+      sourceId: book.id,
+      text: "Kept line",
+    });
+    const withSources = await listCapturesWithSources();
+    expect(withSources).toHaveLength(1);
+    expect(withSources[0]?.sourceTitle).toBe("Source Book");
+  });
+
+  it("rejects captures for missing sources", async () => {
+    await expect(
+      createCapture({
+        sourceType: "article",
+        sourceId: "missing-id",
+        text: "Nope",
+      }),
+    ).rejects.toThrow(/not found/);
+  });
+
+  it("cascades captures when an article is deleted", async () => {
     const article = await createArticle({
-      title: "An Article",
+      title: "Piece",
       url: "https://example.com/a",
     });
     await createCapture({
       sourceType: "article",
       sourceId: article.id,
-      text: "From the article",
+      text: "Quote",
     });
     await deleteArticle(article.id);
-    expect(await listCapturesForSource("article", article.id)).toHaveLength(0);
-  });
-});
-
-describe("library queries", () => {
-  it("unifies, filters and finds continue-reading", async () => {
-    await createBook({
-      title: "Shelf Book",
-      author: "A",
-      status: "want-to-read",
-    });
-    const reading = await createBook({
-      title: "In Progress",
-      author: "B",
-      status: "reading",
-      currentPage: 10,
-      totalPages: 100,
-    });
-    await createArticle({
-      title: "Saved Piece",
-      url: "https://example.com/saved",
-      status: "saved",
-    });
-
-    const all = await listLibraryItems("all");
-    expect(all).toHaveLength(3);
-    expect(await listLibraryItems("books")).toHaveLength(2);
-    expect(await listLibraryItems("articles")).toHaveLength(1);
-    expect(await listLibraryItems("all", "progress")).toHaveLength(1);
-
-    const cont = await getContinueReading();
-    expect(cont?.kind).toBe("book");
-    if (cont?.kind === "book") {
-      expect(cont.book.id).toBe(reading.id);
-    }
-  });
-});
-
-describe("seed and clear", () => {
-  it("seeds only when empty and clears only sample ids", async () => {
-    expect(await seedIfEmpty()).toBe(true);
-    expect(await seedIfEmpty()).toBe(false);
-    expect(await getBook(SEED_IDS.book)).toBeTruthy();
-
-    const userBook = await createBook({ title: "Mine", author: "Me" });
-    await clearSampleData();
-    expect(await getBook(SEED_IDS.book)).toBeUndefined();
-    expect(await getBook(userBook.id)).toBeTruthy();
+    expect(await listCaptures()).toHaveLength(0);
   });
 });

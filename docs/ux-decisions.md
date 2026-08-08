@@ -68,8 +68,9 @@ Sections 1–16 below record the frozen foundation decisions. Section 17
 records the working principles that emerged while making them. Section 18
 records the decisions made while building the component library, frozen with
 Milestone 2. Section 19 records questions deliberately left open. Section 20
-records Milestone 3 (data and library). Persistence details live in
-[`data.md`](./data.md).
+records Milestone 3 (data and library). Section 21 records authentication and
+Supabase persistence. Persistence details live in [`data.md`](./data.md) and
+[`authentication-architecture.md`](./authentication-architecture.md).
 
 ### Changes made under this policy
 
@@ -684,23 +685,39 @@ Carried forward, to be resolved before or during the milestones noted:
 
 ## 20. Milestone 3 — data and library
 
-**Status: in progress / under review.** Milestones 1 and 2 remain frozen.
+**Status: delivered (superseded persistence by §21).** Milestones 1 and 2 remain
+frozen.
 
-Milestone 3 delivers the smallest robust local data foundation and the first
-user-facing library experience:
+Milestone 3 delivered the first user-facing library experience:
 
-- IndexedDB via Dexie (`alostra`, schema version 1)
 - Domain types and repositories for books, articles and captures
 - Application shell (Home, Library, Captures)
-- Home populated from real local data
 - Unified library with filters, search, add/edit/delete
 - Captures attached to books or articles
 - Book progress rules and validation
-- Empty-database sample seed with a clear-sample action
 
 Exact schema, progress rules and search behaviour:
 [`data.md`](./data.md).
 
-Explicitly **not** in Milestone 3: article extraction, in-app article reading,
-highlighting, Goodreads/Notion/Markdown import or export, cloud sync,
-authentication, payments, analytics, notifications, or reading guidance.
+The original device-local store from Milestone 3 was removed when Version 1
+moved to authenticated Supabase persistence (§21).
+
+Explicitly **not** in Milestone 3 alone: article extraction, in-app article
+reading, highlighting, Goodreads/Notion/Markdown import or export, payments,
+analytics, notifications, or reading guidance.
+
+---
+
+## 21. Authentication and cloud persistence (Version 1)
+
+**Status: implemented; awaiting review freeze.** Architecture:
+[`authentication-architecture.md`](./authentication-architecture.md).
+
+Authentication exists so a user’s reading home is durable and available across
+devices. Supabase Auth + PostgreSQL with RLS is the **only** library source of
+truth. Public visitors see a calm landing page; product routes (`/home`,
+`/library`, `/captures`) require sign-in. Email/password only. Calm copy —
+no aggressive onboarding.
+
+Explicitly **not** in this foundation: offline bidirectional sync, OAuth,
+anonymous persistent libraries, book-file storage, conflict UI.

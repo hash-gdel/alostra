@@ -12,7 +12,6 @@ import {
   SectionHeading,
 } from "@/components";
 import { useLiveQuery } from "@/app/_components/use-live-query";
-import { clearSampleData, hasSampleData } from "@/lib/db/seed";
 import {
   ARTICLE_STATUS_LABELS,
   BOOK_STATUS_LABELS,
@@ -31,37 +30,29 @@ type HomeData = {
   continueItem?: LibraryItem;
   recent: LibraryItem[];
   captures: Awaited<ReturnType<typeof listCapturesWithSources>>;
-  samplePresent: boolean;
 };
 
 async function loadHome(): Promise<HomeData> {
-  const [continueItem, recent, captures, samplePresent] = await Promise.all([
+  const [continueItem, recent, captures] = await Promise.all([
     getContinueReading(),
     listRecentlyAdded(6),
     listCapturesWithSources(),
-    hasSampleData(),
   ]);
   return {
     continueItem,
     recent,
     captures: captures.slice(0, 4),
-    samplePresent,
   };
 }
 
 export default function HomePage() {
-  const { data, loading, reload } = useLiveQuery(
-    loadHome,
-    [],
-    {
-      continueItem: undefined,
-      recent: [],
-      captures: [],
-      samplePresent: false,
-    },
-  );
+  const { data, loading } = useLiveQuery(loadHome, [], {
+    continueItem: undefined,
+    recent: [],
+    captures: [],
+  });
 
-  const { continueItem, recent, captures, samplePresent } = data;
+  const { continueItem, recent, captures } = data;
   const empty =
     !loading && !continueItem && recent.length === 0 && captures.length === 0;
 
@@ -75,7 +66,7 @@ export default function HomePage() {
           Continue where you left off
         </h1>
         <p className="mt-3 max-w-reading text-base text-muted-foreground text-pretty">
-          Your books, articles and the lines worth keeping — on this device.
+          Your books, articles and the lines worth keeping — in one place.
         </p>
       </header>
 
@@ -84,7 +75,7 @@ export default function HomePage() {
           <EmptyState
             icon={<BookIcon className="size-6" />}
             title="Your reading corner is empty"
-            description="Add a book or an article to begin. What you save stays on this device."
+            description="Add a book or an article to begin. What you save stays private to your account."
             action={<Button href="/library">Open the library</Button>}
           />
         </div>
@@ -223,21 +214,6 @@ export default function HomePage() {
           </section>
         </div>
       )}
-
-      {samplePresent ? (
-        <p className="mt-section text-xs text-muted-foreground">
-          Sample books and captures are loaded for development.{" "}
-          <button
-            type="button"
-            className="underline underline-offset-4 transition-colors duration-(--duration-quick) ease-standard hover:text-foreground"
-            onClick={() => {
-              void clearSampleData().then(reload);
-            }}
-          >
-            Clear sample data
-          </button>
-        </p>
-      ) : null}
     </PageContainer>
   );
 }

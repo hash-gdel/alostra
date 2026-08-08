@@ -1,7 +1,8 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
+  Button,
   HomeIcon,
   InboxIcon,
   MobileNavItem,
@@ -9,20 +10,23 @@ import {
   QueueIcon,
   SidebarItem,
 } from "@/components";
+import { useAuth } from "@/lib/auth/auth-context";
 
 const NAV = [
-  { href: "/", label: "Home", icon: HomeIcon },
+  { href: "/home", label: "Home", icon: HomeIcon },
   { href: "/library", label: "Library", icon: QueueIcon },
   { href: "/captures", label: "Captures", icon: InboxIcon },
 ] as const;
 
 function isActive(pathname: string, href: string): boolean {
-  if (href === "/") return pathname === "/";
+  if (href === "/home") return pathname === "/home";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, signOut } = useAuth();
 
   return (
     <div className="min-h-dvh bg-canvas text-foreground">
@@ -43,12 +47,49 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               />
             ))}
           </NavigationGroup>
+          <div className="mt-auto px-3 pt-block">
+            {user ? (
+              <div className="space-y-2">
+                <p className="truncate text-2xs text-muted-foreground">
+                  {user.email}
+                </p>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => {
+                    void signOut().then(() => {
+                      router.push("/");
+                      router.refresh();
+                    });
+                  }}
+                >
+                  Sign out
+                </Button>
+              </div>
+            ) : null}
+          </div>
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col pb-20 md:pb-0">
-          <header className="border-b border-border px-gutter py-4 md:hidden">
+          <header className="flex items-center justify-between border-b border-border px-gutter py-4 md:hidden">
             <p className="font-serif text-lg tracking-display">Alostra</p>
+            {user ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  void signOut().then(() => {
+                    router.push("/");
+                    router.refresh();
+                  });
+                }}
+              >
+                Sign out
+              </Button>
+            ) : null}
           </header>
+
           <div className="flex-1">{children}</div>
         </div>
       </div>

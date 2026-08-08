@@ -1,17 +1,38 @@
-import { getDb } from "@/lib/db/database";
 import { createId, nowIso } from "@/lib/db/ids";
 import { computeArticleProgress } from "@/lib/domain/progress";
 import type { Article, ArticleInput, ArticleStatus } from "@/lib/domain/types";
+import {
+  articleFromRow,
+  articleToRow,
+  type ArticleRow,
+} from "@/lib/repositories/mappers";
+import { requireUser } from "@/lib/repositories/require-user";
 
 export async function listArticles(): Promise<Article[]> {
-  return getDb().articles.orderBy("updatedAt").reverse().toArray();
+  const { client, userId } = await requireUser();
+  const { data, error } = await client
+    .from("articles")
+    .select("*")
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: false });
+  if (error) throw error;
+  return (data as ArticleRow[]).map(articleFromRow);
 }
 
 export async function getArticle(id: string): Promise<Article | undefined> {
-  return getDb().articles.get(id);
+  const { client, userId } = await requireUser();
+  const { data, error } = await client
+    .from("articles")
+    .select("*")
+    .eq("id", id)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? articleFromRow(data as ArticleRow) : undefined;
 }
 
 export async function createArticle(input: ArticleInput): Promise<Article> {
+  const { client, userId } = await requireUser();
   const status = input.status ?? "saved";
   const now = nowIso();
   const article: Article = {
@@ -28,7 +49,10 @@ export async function createArticle(input: ArticleInput): Promise<Article> {
     createdAt: now,
     updatedAt: now,
   };
-  await getDb().articles.add(article);
+  const { error } = await client
+    .from("articles")
+    .insert(articleToRow(article, userId));
+  if (error) throw error;
   return article;
 }
 
@@ -39,6 +63,7 @@ export async function updateArticle(
     lastOpenedAt?: string;
   },
 ): Promise<Article> {
+  const { client, userId } = await requireUser();
   const existing = await getArticle(id);
   if (!existing) throw new Error(`Article not found: ${id}`);
 
@@ -69,16 +94,23 @@ export async function updateArticle(
     updatedAt: nowIso(),
   };
 
-  await getDb().articles.put(next);
+  const { error } = await client
+    .from("articles")
+    .update(articleToRow(next, userId))
+    .eq("id", id)
+    .eq("user_id", userId);
+  if (error) throw error;
   return next;
 }
 
 export async function deleteArticle(id: string): Promise<void> {
-  const db = getDb();
-  await db.transaction("rw", db.articles, db.captures, async () => {
-    await db.articles.delete(id);
-    await db.captures.where({ sourceType: "article", sourceId: id }).delete();
-  });
+  const { client, userId } = await requireUser();
+  const { error } = await client
+    .from("articles")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", userId);
+  if (error) throw error;
 }
 
 export async function touchArticleOpened(id: string): Promise<Article> {

@@ -1,7 +1,7 @@
 # Alostra development rules
 
-Alostra is a private, local-first web application that unifies books,
-articles, and reading captures.
+Alostra is a private web application that unifies books, articles, and
+reading captures into one continuous reading home.
 
 ## Core hypothesis
 
@@ -12,6 +12,7 @@ inside one unified workspace and are willing to pay for that workflow.
 
 Implement only:
 
+- authenticated accounts (email/password via Supabase Auth);
 - unified queue for books and articles;
 - book status and optional page progress;
 - clean article reader;
@@ -21,7 +22,7 @@ Implement only:
 - Goodreads CSV import;
 - Markdown export;
 - complete JSON backup and restore;
-- device-local storage;
+- Supabase PostgreSQL as the library source of truth;
 - in-app feedback;
 - consent-based error reporting;
 - minimal privacy-friendly analytics;
@@ -29,7 +30,9 @@ Implement only:
 
 Do not implement:
 
-- cloud synchronization;
+- anonymous persistent libraries;
+- browser IndexedDB as a second source of truth;
+- offline bidirectional sync;
 - native mobile applications;
 - AI chat;
 - article summaries;
@@ -41,15 +44,17 @@ Do not implement:
 - reading challenges;
 - recommendations;
 - audiobooks;
-- advanced statistics.
+- advanced statistics;
+- EPUB/PDF/full-book file storage.
 
 ## Technical rules
 
 - Use Next.js App Router.
 - Use TypeScript strict mode.
 - Use Tailwind CSS.
-- Use IndexedDB through Dexie for reading data.
-- Treat device-local data as the source of truth.
+- Use Supabase Auth + Supabase PostgreSQL for library data.
+- Require authentication for product/library routes; keep a public landing page.
+- Treat Supabase (with RLS) as the source of truth for user library rows.
 - Add database migrations for schema changes.
 - Keep business logic separate from UI components.
 - Never send article text, highlights, notes, or titles to analytics.
@@ -61,3 +66,4 @@ Do not implement:
 - Run lint, type checking, tests, and production build before completing each milestone.
 - Work in small, independently testable milestones.
 - Never implement future features without explicit approval.
+- Follow `docs/authentication-architecture.md` for auth and persistence.

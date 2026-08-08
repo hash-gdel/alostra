@@ -1,6 +1,6 @@
 /**
- * Domain types for Alostra's local reading data.
- * IndexedDB (via Dexie) is the source of truth; these shapes are the contract.
+ * Domain types for Alostra library data.
+ * Supabase PostgreSQL is the source of truth; these shapes are the contract.
  */
 
 export type BookStatus = "want-to-read" | "reading" | "finished";

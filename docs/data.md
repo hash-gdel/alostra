@@ -1,10 +1,14 @@
 # Alostra — data and persistence
 
-Device-local reading data for Milestone 3. IndexedDB through Dexie is the
-source of truth. Nothing here is synced to a server.
+Reading library data for Version 1.
 
-**Related:** domain decisions and milestone boundaries live in
-[`ux-decisions.md`](./ux-decisions.md). UI primitives are frozen in
+**Source of truth:** Supabase PostgreSQL for authenticated users.  
+**Architecture:** [`authentication-architecture.md`](./authentication-architecture.md).
+
+There is no device-local library database in production. Visitors see a public
+landing page; the product requires sign-in.
+
+**Related:** [`ux-decisions.md`](./ux-decisions.md), frozen UI in
 [`components.md`](./components.md).
 
 ---
@@ -15,121 +19,101 @@ source of truth. Nothing here is synced to a server.
 
 | Field | Type | Notes |
 |---|---|---|
-| `id` | string | UUID |
+| `id` | string (UUID) | |
 | `title` | string | Required |
 | `author` | string | May be empty |
-| `coverUrl` | string? | Optional. Stored as given |
+| `coverUrl` | string? | Optional |
 | `status` | `want-to-read` \| `reading` \| `finished` | |
-| `currentPage` | number? | Non-negative integer when set |
-| `totalPages` | number? | Positive integer when set |
+| `currentPage` | number? | |
+| `totalPages` | number? | |
 | `progressPercent` | number | 0–100, derived |
-| `createdAt` | ISO string | |
-| `updatedAt` | ISO string | |
+| `createdAt` / `updatedAt` | ISO string | |
 | `lastOpenedAt` | ISO string? | |
+
+Books are tracking records only (metadata, status, progress, captures, notes).
+No EPUB/PDF/full-book storage.
 
 ### Article
 
 | Field | Type | Notes |
 |---|---|---|
-| `id` | string | UUID |
+| `id` | string (UUID) | |
 | `title` | string | Required |
-| `url` | string | Required http(s) URL |
-| `author` | string? | |
-| `siteName` | string? | |
+| `url` | string | Required http(s) |
+| `author` / `siteName` | string? | |
 | `status` | `saved` \| `reading` \| `finished` | |
-| `progressPercent` | number? | 0–100; 100 when finished |
-| `createdAt` | ISO string | |
-| `updatedAt` | ISO string | |
-| `lastOpenedAt` | ISO string? | |
+| `progressPercent` | number? | 100 when finished |
+| timestamps | ISO string | |
 
 ### Capture
 
 | Field | Type | Notes |
 |---|---|---|
-| `id` | string | UUID |
+| `id` | string (UUID) | |
 | `sourceType` | `book` \| `article` | |
-| `sourceId` | string | Must reference a living source |
+| `sourceId` | string | Living source |
 | `text` | string | Required |
 | `note` | string? | |
 | `pageNumber` | number? | Books only |
-| `createdAt` | ISO string | |
-| `updatedAt` | ISO string | |
+| timestamps | ISO string | |
 
-Deleting a book or article also deletes captures that point at it.
+Deleting a book or article deletes its captures (`on delete cascade`).
 
 ---
 
-## Dexie schema
+## Supabase schema
 
-Database name: `alostra`. Current version: **1**.
+Tables `books`, `articles`, `captures` with `user_id` referencing
+`auth.users`. Captures use `book_id` / `article_id` (exactly one set) with
+FK cascade.
 
-| Store | Primary key | Indexes |
-|---|---|---|
-| `books` | `id` | `title`, `author`, `status`, `updatedAt`, `lastOpenedAt`, `createdAt` |
-| `articles` | `id` | `title`, `url`, `status`, `updatedAt`, `lastOpenedAt`, `createdAt` |
-| `captures` | `id` | `sourceType`, `sourceId`, `[sourceType+sourceId]`, `updatedAt`, `createdAt` |
-| `meta` | `key` | — |
+Migrations (apply in order):
 
-Future changes add a new `.version(n).stores(...)` block. Do not edit a shipped
-version's store definition in place. Implementation:
-`src/lib/db/database.ts`.
+1. `supabase/migrations/20260807000000_library_rls.sql` — creates tables,
+   indexes, constraints, and RLS policies.
+2. `supabase/migrations/20260808000000_grant_authenticated_library.sql` —
+   grants `SELECT`/`INSERT`/`UPDATE`/`DELETE` on those tables to the
+   `authenticated` role.
+
+Capture INSERT/UPDATE policies require the referenced book or article to be
+owned by `auth.uid()`. RLS alone is not sufficient for PostgREST; migration 2
+supplies the required table privileges.
+
+Never put a service-role key in `NEXT_PUBLIC_*` variables.
 
 ---
 
 ## Persistence behaviour
 
-- All reads and writes go through repository functions in
-  `src/lib/repositories/`. Presentational components do not open Dexie.
-- Data survives refresh and tab close because it lives in IndexedDB.
-- There is no cloud sync, backup export, or multi-device account in this
-  milestone.
-- On first open of an empty database, tasteful sample records are seeded
-  (`src/lib/db/seed.ts`). Sample IDs are stable; Home exposes **Clear sample
-  data** when they are present. User-created records are never cleared by that
-  action.
+- UI talks to `src/lib/repositories/*` only.
+- Repositories call `requireUser()` then Supabase with the session JWT.
+- RLS enforces ownership; middleware redirects are UX only.
+- Env: see `.env.example`. Without Supabase env vars, product routes cannot
+  run a library (no silent local fallback).
 
 ---
 
-## Progress rules
+## Progress and search
 
-Implemented in `src/lib/domain/progress.ts`:
-
-- Pages are clamped to non-negative integers; current page cannot exceed total
-  pages.
-- When both pages are known, `progressPercent = round(current / total * 100)`,
-  clamped 0–100.
-- `status: "finished"` always sets progress to **100%** (books and articles).
-- Invalid, negative or over-limit values are never stored as-is.
-
----
-
-## Search behaviour
-
-Implemented in `src/lib/domain/search.ts`:
-
-- Case-insensitive.
-- Library search matches book title/author, article title/author/URL/site name.
-- Capture search matches capture text and note, and also the source title /
-  author / URL so a search for a book name surfaces its captures.
+`src/lib/domain/progress.ts` and `src/lib/domain/search.ts`.
 
 ---
 
 ## Cover URLs
 
-`BookCover` (frozen) uses `next/image` and does not yet allow remote hosts —
-see the open question in `ux-decisions.md`. Cover URLs are stored on the book
-record. Same-origin paths starting with `/` are shown; `http(s)` URLs fall back
-to the designed placeholder until hosts are configured.
+Remote `http(s)` covers are stored but not shown until `next.config` hosts are
+configured. Same-origin `/` paths work.
 
 ---
 
-## What this milestone does not include
+## Out of scope
 
-- Article content extraction or an in-app reader
-- Highlighting inside article bodies
-- Goodreads / Notion / Markdown import or export
-- Cloud sync, authentication, payments
-- Analytics, notifications, reading guidance
+- Offline bidirectional sync / browser DB as a second source of truth
+- Anonymous persistent libraries
+- Article extraction, in-app reader, highlighting
+- Imports/exports, payments, analytics, notifications
+- OAuth providers
+- EPUB/PDF book-file storage
 
 ---
 
@@ -138,8 +122,8 @@ to the designed placeholder until hosts are configured.
 | Concern | Location |
 |---|---|
 | Types | `src/lib/domain/types.ts` |
-| Progress / validation / search | `src/lib/domain/*.ts` |
-| Database | `src/lib/db/database.ts` |
-| Seed / clear sample | `src/lib/db/seed.ts` |
-| Repositories | `src/lib/repositories/*.ts` |
-| App shell & screens | `src/app/(app)/` |
+| Repositories | `src/lib/repositories/{books,articles,captures,library}.ts` |
+| Auth session UI | `src/lib/auth/auth-context.tsx` |
+| Route gates | `src/lib/auth/route-gates.ts` |
+| Supabase clients | `src/lib/supabase/` |
+| Architecture | `docs/authentication-architecture.md` |

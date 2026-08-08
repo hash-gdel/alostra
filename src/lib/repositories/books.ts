@@ -1,7 +1,12 @@
-import { getDb } from "@/lib/db/database";
 import { createId, nowIso } from "@/lib/db/ids";
 import { computeBookProgress } from "@/lib/domain/progress";
 import type { Book, BookInput, BookStatus } from "@/lib/domain/types";
+import {
+  bookFromRow,
+  bookToRow,
+  type BookRow,
+} from "@/lib/repositories/mappers";
+import { requireUser } from "@/lib/repositories/require-user";
 
 function applyProgress(
   status: BookStatus,
@@ -12,15 +17,30 @@ function applyProgress(
 }
 
 export async function listBooks(): Promise<Book[]> {
-  const db = getDb();
-  return db.books.orderBy("updatedAt").reverse().toArray();
+  const { client, userId } = await requireUser();
+  const { data, error } = await client
+    .from("books")
+    .select("*")
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: false });
+  if (error) throw error;
+  return (data as BookRow[]).map(bookFromRow);
 }
 
 export async function getBook(id: string): Promise<Book | undefined> {
-  return getDb().books.get(id);
+  const { client, userId } = await requireUser();
+  const { data, error } = await client
+    .from("books")
+    .select("*")
+    .eq("id", id)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? bookFromRow(data as BookRow) : undefined;
 }
 
 export async function createBook(input: BookInput): Promise<Book> {
+  const { client, userId } = await requireUser();
   const status = input.status ?? "want-to-read";
   const progress = applyProgress(status, input.currentPage, input.totalPages);
   const now = nowIso();
@@ -34,7 +54,8 @@ export async function createBook(input: BookInput): Promise<Book> {
     createdAt: now,
     updatedAt: now,
   };
-  await getDb().books.add(book);
+  const { error } = await client.from("books").insert(bookToRow(book, userId));
+  if (error) throw error;
   return book;
 }
 
@@ -42,6 +63,7 @@ export async function updateBook(
   id: string,
   input: Partial<BookInput> & { status?: BookStatus; lastOpenedAt?: string },
 ): Promise<Book> {
+  const { client, userId } = await requireUser();
   const existing = await getBook(id);
   if (!existing) throw new Error(`Book not found: ${id}`);
 
@@ -55,8 +77,7 @@ export async function updateBook(
   const next: Book = {
     ...existing,
     title: input.title !== undefined ? input.title.trim() : existing.title,
-    author:
-      input.author !== undefined ? input.author.trim() : existing.author,
+    author: input.author !== undefined ? input.author.trim() : existing.author,
     coverUrl:
       input.coverUrl !== undefined
         ? input.coverUrl.trim() || undefined
@@ -67,16 +88,23 @@ export async function updateBook(
     updatedAt: nowIso(),
   };
 
-  await getDb().books.put(next);
+  const { error } = await client
+    .from("books")
+    .update(bookToRow(next, userId))
+    .eq("id", id)
+    .eq("user_id", userId);
+  if (error) throw error;
   return next;
 }
 
 export async function deleteBook(id: string): Promise<void> {
-  const db = getDb();
-  await db.transaction("rw", db.books, db.captures, async () => {
-    await db.books.delete(id);
-    await db.captures.where({ sourceType: "book", sourceId: id }).delete();
-  });
+  const { client, userId } = await requireUser();
+  const { error } = await client
+    .from("books")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", userId);
+  if (error) throw error;
 }
 
 export async function touchBookOpened(id: string): Promise<Book> {
