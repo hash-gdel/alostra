@@ -186,13 +186,24 @@ The application is designed to be:
 
 ---
 
-## 🚧 Authentication & persistence (Version 1)
+## ✅ Authentication & persistence (Version 1)
 
 - Email/password accounts (Supabase Auth)
 - Supabase PostgreSQL as the only library database
 - Row Level Security ownership
 - Auth-gated product routes; public landing page
 - Multi-device reading home
+
+---
+
+## 🚧 Milestone 4 — Product Experience
+
+Plan **approved and frozen** — implementation follows
+[`docs/milestone-4-product-experience-plan.md`](./docs/milestone-4-product-experience-plan.md).
+
+- Signed-in Home, Library, Captures, shell, and forms
+- Reading-home hierarchy (not a generic SaaS dashboard)
+- Bookmark Thread discipline; frozen M1/M2 composition only
 
 ---
 
@@ -251,6 +262,7 @@ npm run build
   library in `src/components/`.
 - [`docs/data.md`](./docs/data.md) — domain model and Supabase persistence.
 - [`docs/authentication-architecture.md`](./docs/authentication-architecture.md) — auth and persistence architecture.
+- [`docs/milestone-4-product-experience-plan.md`](./docs/milestone-4-product-experience-plan.md) — Milestone 4 product experience plan (frozen).
 - [`docs/ux-decisions.md`](./docs/ux-decisions.md) — what we decided and why.
 
 `/dev/design-system` renders every token and every component, in both modes,

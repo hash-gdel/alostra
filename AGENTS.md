@@ -67,3 +67,4 @@ Do not implement:
 - Work in small, independently testable milestones.
 - Never implement future features without explicit approval.
 - Follow `docs/authentication-architecture.md` for auth and persistence.
+- Follow `docs/milestone-4-product-experience-plan.md` for Milestone 4 signed-in product UX (frozen plan).

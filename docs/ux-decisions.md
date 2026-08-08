@@ -69,7 +69,8 @@ records the working principles that emerged while making them. Section 18
 records the decisions made while building the component library, frozen with
 Milestone 2. Section 19 records questions deliberately left open. Section 20
 records Milestone 3 (data and library). Section 21 records authentication and
-Supabase persistence. Persistence details live in [`data.md`](./data.md) and
+Supabase persistence. Section 22 records the frozen Milestone 4 product
+experience plan. Persistence details live in [`data.md`](./data.md) and
 [`authentication-architecture.md`](./authentication-architecture.md).
 
 ### Changes made under this policy
@@ -721,3 +722,33 @@ no aggressive onboarding.
 
 Explicitly **not** in this foundation: offline bidirectional sync, OAuth,
 anonymous persistent libraries, book-file storage, conflict UI.
+
+---
+
+## 22. Milestone 4 — product experience plan
+
+**Status: approved and frozen (plan).** Source of truth:
+[`milestone-4-product-experience-plan.md`](./milestone-4-product-experience-plan.md).
+
+Milestone 4 redesigns the signed-in product (Home, Library, Captures, shell,
+forms) so it feels like a private reading home—by composition, hierarchy,
+typography, and Bookmark Thread discipline—not by decoration or new product
+scope.
+
+Binding additions recorded in the plan:
+
+- Whitespace over density
+- Micro-interactions over animations
+- Recognition before information
+- Continue Reading as returning to an unfinished thought
+- Captures as intentionally kept fragments (not a notes database or PKM)
+- Library V1 defaults to an editorial list (not an irreversible forever mode)
+
+Explicitly **not** in Milestone 4: AI, recommendations, reminders, streaks,
+goals, social features, dashboards, charts, analytics UI, EPUB/PDF readers,
+offline sync, auth/persistence redesign, payments, integrations, spine/shelf
+skeuomorphism, new fonts, or frozen Milestone 1/2 API changes for aesthetics.
+
+Milestone 1 tokens and Milestone 2 component APIs remain frozen. Screens
+compose existing primitives. Implementation follows the plan document; do not
+reinterpret the Alostra philosophy.
