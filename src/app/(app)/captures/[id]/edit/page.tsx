@@ -169,7 +169,7 @@ export default function EditCapturePage() {
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         title="Delete this capture?"
-        description="The kept line will be removed from this device. This cannot be undone."
+        description="This cannot be undone."
         confirmLabel="Delete capture"
         confirming={deleting}
         onConfirm={() => {
