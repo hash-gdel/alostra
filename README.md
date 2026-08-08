@@ -145,14 +145,14 @@ Alostra is built with a modern web stack.
 - React
 - TypeScript
 - Tailwind CSS
-- IndexedDB via Dexie *(planned — the reading data layer is not built yet)*
+- Supabase Auth + PostgreSQL
 - Vercel
 
 The application is designed to be:
 
 - ⚡ Fast
 - 🔒 Privacy-first
-- 💻 Local-first
+- ☁️ Account-backed across devices
 - ♿ Accessible
 
 ---
@@ -178,19 +178,28 @@ The application is designed to be:
 
 ---
 
-## 🚧 In Progress
+## ✅ Milestone 3 — Data and Library
 
-- Home experience
-- Reading workspace
+- Domain model and repositories
+- Home, unified library, captures
+- Search and reading progress
+
+---
+
+## 🚧 Authentication & persistence (Version 1)
+
+- Email/password accounts (Supabase Auth)
+- Supabase PostgreSQL as the only library database
+- Row Level Security ownership
+- Auth-gated product routes; public landing page
+- Multi-device reading home
 
 ---
 
 ## 🔜 Coming Soon
 
-- Books
-- Articles
-- Captures
-- Reading progress
+- Article reading and highlighting
+- Imports and exports
 - Public Preview
 
 ---
@@ -208,7 +217,14 @@ Clone the repository.
 ```bash
 git clone https://github.com/hash-gdel/alostra.git
 npm install
+cp .env.example .env.local
 ```
+
+Fill in Supabase URL and anon key in `.env.local`. The product library requires
+a configured Supabase project.
+
+Apply the SQL migration in `supabase/migrations/` to your Supabase project
+(SQL editor or Supabase CLI) before signing in.
 
 Run the development server:
 
@@ -221,6 +237,7 @@ Before completing a milestone:
 ```bash
 npm run lint
 npx tsc --noEmit
+npm test
 npm run build
 ```
 
@@ -232,6 +249,8 @@ npm run build
   rules for using them. Mirrors `src/app/globals.css`.
 - [`docs/components.md`](./docs/components.md) — the reusable component
   library in `src/components/`.
+- [`docs/data.md`](./docs/data.md) — domain model and Supabase persistence.
+- [`docs/authentication-architecture.md`](./docs/authentication-architecture.md) — auth and persistence architecture.
 - [`docs/ux-decisions.md`](./docs/ux-decisions.md) — what we decided and why.
 
 `/dev/design-system` renders every token and every component, in both modes,
