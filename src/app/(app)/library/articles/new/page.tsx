@@ -9,6 +9,7 @@ import {
   SectionHeading,
   useToast,
 } from "@/components";
+import { navigateAfterSuccess } from "@/app/_components/navigate-after-success";
 import { StatusField } from "@/app/_components/status-field";
 import { ARTICLE_STATUS_LABELS } from "@/lib/domain/labels";
 import {
@@ -34,6 +35,7 @@ export default function NewArticlePage() {
   });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -42,13 +44,16 @@ export default function NewArticlePage() {
     if (!result.data) return;
 
     setSaving(true);
+    setSaved(false);
     try {
-      const article = await createArticle(result.data);
+      await createArticle(result.data);
       show({ title: "Article added" });
-      router.push(`/library/articles/${article.id}/edit`);
+      setSaved(true);
+      await navigateAfterSuccess(router, "/library");
     } catch {
       show({ title: "Could not save the article" });
       setSaving(false);
+      setSaved(false);
     }
   }
 
@@ -95,7 +100,11 @@ export default function NewArticlePage() {
           error={errors.status}
         />
         <div className="mt-2 flex flex-wrap gap-3">
-          <Button type="submit" loading={saving} loadingLabel="Saving…">
+          <Button
+            type="submit"
+            loading={saving}
+            loadingLabel={saved ? "Saved" : "Saving…"}
+          >
             Save article
           </Button>
           <Button href="/library" variant="ghost">

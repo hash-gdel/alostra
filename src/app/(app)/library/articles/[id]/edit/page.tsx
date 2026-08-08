@@ -10,6 +10,7 @@ import {
   SectionHeading,
   useToast,
 } from "@/components";
+import { navigateAfterSuccess } from "@/app/_components/navigate-after-success";
 import { StatusField } from "@/app/_components/status-field";
 import { ARTICLE_STATUS_LABELS } from "@/lib/domain/labels";
 import {
@@ -34,6 +35,7 @@ export default function EditArticlePage() {
   const [values, setValues] = useState<ArticleFormValues | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [missing, setMissing] = useState(false);
@@ -82,13 +84,16 @@ export default function EditArticlePage() {
     if (!result.data) return;
 
     setSaving(true);
+    setSaved(false);
     try {
       await updateArticle(id, result.data);
       show({ title: "Article updated" });
-      router.push("/library");
+      setSaved(true);
+      await navigateAfterSuccess(router, "/library");
     } catch {
       show({ title: "Could not update the article" });
       setSaving(false);
+      setSaved(false);
     }
   }
 
@@ -137,7 +142,11 @@ export default function EditArticlePage() {
           error={errors.status}
         />
         <div className="mt-2 flex flex-wrap gap-3">
-          <Button type="submit" loading={saving} loadingLabel="Saving…">
+          <Button
+            type="submit"
+            loading={saving}
+            loadingLabel={saved ? "Saved" : "Saving…"}
+          >
             Save changes
           </Button>
           <Button href="/library" variant="ghost">
@@ -163,9 +172,9 @@ export default function EditArticlePage() {
         onConfirm={() => {
           setDeleting(true);
           void deleteArticle(id)
-            .then(() => {
+            .then(async () => {
               show({ title: "Article deleted" });
-              router.push("/library");
+              await navigateAfterSuccess(router, "/library");
             })
             .catch(() => {
               show({ title: "Could not delete the article" });

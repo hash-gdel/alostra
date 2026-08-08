@@ -11,6 +11,7 @@ import {
   Textarea,
   useToast,
 } from "@/components";
+import { navigateAfterSuccess } from "@/app/_components/navigate-after-success";
 import { SourceSelectField } from "@/app/_components/source-select-field";
 import type { Article, Book } from "@/lib/domain/types";
 import {
@@ -35,6 +36,7 @@ export default function EditCapturePage() {
   const [values, setValues] = useState<CaptureFormValues | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [missing, setMissing] = useState(false);
@@ -87,13 +89,16 @@ export default function EditCapturePage() {
     if (!result.data) return;
 
     setSaving(true);
+    setSaved(false);
     try {
       await updateCapture(id, result.data);
       show({ title: "Capture updated" });
-      router.push("/captures");
+      setSaved(true);
+      await navigateAfterSuccess(router, "/captures");
     } catch {
       show({ title: "Could not update the capture" });
       setSaving(false);
+      setSaved(false);
     }
   }
 
@@ -149,7 +154,11 @@ export default function EditCapturePage() {
           />
         ) : null}
         <div className="mt-2 flex flex-wrap gap-3">
-          <Button type="submit" loading={saving} loadingLabel="Saving…">
+          <Button
+            type="submit"
+            loading={saving}
+            loadingLabel={saved ? "Saved" : "Saving…"}
+          >
             Save changes
           </Button>
           <Button href="/captures" variant="ghost">
@@ -175,9 +184,9 @@ export default function EditCapturePage() {
         onConfirm={() => {
           setDeleting(true);
           void deleteCapture(id)
-            .then(() => {
+            .then(async () => {
               show({ title: "Capture deleted" });
-              router.push("/captures");
+              await navigateAfterSuccess(router, "/captures");
             })
             .catch(() => {
               show({ title: "Could not delete the capture" });

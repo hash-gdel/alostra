@@ -10,6 +10,7 @@ import {
   SectionHeading,
   useToast,
 } from "@/components";
+import { navigateAfterSuccess } from "@/app/_components/navigate-after-success";
 import { StatusField } from "@/app/_components/status-field";
 import { BOOK_STATUS_LABELS } from "@/lib/domain/labels";
 import {
@@ -30,6 +31,7 @@ export default function EditBookPage() {
   const [values, setValues] = useState<BookFormValues | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [missing, setMissing] = useState(false);
@@ -79,13 +81,16 @@ export default function EditBookPage() {
     if (!result.data) return;
 
     setSaving(true);
+    setSaved(false);
     try {
       await updateBook(id, result.data);
       show({ title: "Book updated" });
-      router.push("/library");
+      setSaved(true);
+      await navigateAfterSuccess(router, "/library");
     } catch {
       show({ title: "Could not update the book" });
       setSaving(false);
+      setSaved(false);
     }
   }
 
@@ -150,7 +155,11 @@ export default function EditBookPage() {
           error={errors.coverUrl}
         />
         <div className="mt-2 flex flex-wrap gap-3">
-          <Button type="submit" loading={saving} loadingLabel="Saving…">
+          <Button
+            type="submit"
+            loading={saving}
+            loadingLabel={saved ? "Saved" : "Saving…"}
+          >
             Save changes
           </Button>
           <Button href="/library" variant="ghost">
@@ -176,9 +185,9 @@ export default function EditBookPage() {
         onConfirm={() => {
           setDeleting(true);
           void deleteBook(id)
-            .then(() => {
+            .then(async () => {
               show({ title: "Book deleted" });
-              router.push("/library");
+              await navigateAfterSuccess(router, "/library");
             })
             .catch(() => {
               show({ title: "Could not delete the book" });

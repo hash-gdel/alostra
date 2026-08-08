@@ -10,6 +10,7 @@ import {
   Textarea,
   useToast,
 } from "@/components";
+import { navigateAfterSuccess } from "@/app/_components/navigate-after-success";
 import { SourceSelectField } from "@/app/_components/source-select-field";
 import type { Article, Book } from "@/lib/domain/types";
 import {
@@ -35,6 +36,7 @@ export default function NewCapturePage() {
   });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     void Promise.all([listBooks(), listArticles()]).then(([b, a]) => {
@@ -50,13 +52,16 @@ export default function NewCapturePage() {
     if (!result.data) return;
 
     setSaving(true);
+    setSaved(false);
     try {
-      const capture = await createCapture(result.data);
+      await createCapture(result.data);
       show({ title: "Capture saved" });
-      router.push(`/captures/${capture.id}/edit`);
+      setSaved(true);
+      await navigateAfterSuccess(router, "/captures");
     } catch {
       show({ title: "Could not save the capture" });
       setSaving(false);
+      setSaved(false);
     }
   }
 
@@ -107,7 +112,11 @@ export default function NewCapturePage() {
           />
         ) : null}
         <div className="mt-2 flex flex-wrap gap-3">
-          <Button type="submit" loading={saving} loadingLabel="Saving…">
+          <Button
+            type="submit"
+            loading={saving}
+            loadingLabel={saved ? "Saved" : "Saving…"}
+          >
             Save capture
           </Button>
           <Button href="/captures" variant="ghost">
