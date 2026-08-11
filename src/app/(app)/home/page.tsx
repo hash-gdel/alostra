@@ -131,8 +131,8 @@ export default function HomePage() {
           <EmptyState
             icon={<BookIcon className="size-6" />}
             title="Nothing here yet"
-            description="Add a book or an article to begin."
-            action={<Button href="/library">Open the library</Button>}
+            description="Add your first book."
+            action={<Button href="/library/books/new">Add a book</Button>}
           />
         </div>
       ) : (
@@ -261,9 +261,6 @@ export default function HomePage() {
             >
               Your Library
             </h2>
-            <p className="mt-2 max-w-reading text-sm text-muted-foreground text-pretty">
-              Books and articles in one place.
-            </p>
             <div className="mt-block">
               <Button href="/library" variant="quiet">
                 Open library

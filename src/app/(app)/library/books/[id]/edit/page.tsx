@@ -12,6 +12,7 @@ import {
 } from "@/components";
 import {
   FormActions,
+  FormLoading,
   FormSection,
 } from "@/app/_components/form-section";
 import { navigateAfterSuccess } from "@/app/_components/navigate-after-success";
@@ -72,7 +73,8 @@ export default function EditBookPage() {
   if (!values) {
     return (
       <ContentContainer className="py-section">
-        <p className="text-sm text-muted-foreground">Loading book…</p>
+        <SectionHeading title="Edit book" />
+        <FormLoading label="Loading book" />
       </ContentContainer>
     );
   }

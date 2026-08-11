@@ -87,7 +87,6 @@ export default function LibraryPage() {
         <SectionHeading
           id="library-heading"
           title="Library"
-          description="Books and articles together."
           action={
             <Button href="/library/books/new" size="sm">
               Add book
@@ -122,7 +121,7 @@ export default function LibraryPage() {
           {FILTERS.map((item) => (
             <Button
               key={item.id}
-              size="sm"
+              size="md"
               variant={filter === item.id ? "quiet" : "ghost"}
               aria-pressed={filter === item.id}
               onClick={() => setFilter(item.id)}
@@ -139,11 +138,9 @@ export default function LibraryPage() {
         ) : empty ? (
           <EmptyState
             icon={<BookIcon className="size-6" />}
-            title={query ? "No matches" : "Nothing in the library yet"}
+            title={query ? "No matches" : "Nothing here yet"}
             description={
-              query
-                ? "Try a different word, or clear the search."
-                : "Add a book or an article to begin."
+              query ? "Try a different word." : "Add your first book."
             }
             action={
               query ? (

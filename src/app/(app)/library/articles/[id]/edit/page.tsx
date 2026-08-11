@@ -12,6 +12,7 @@ import {
 } from "@/components";
 import {
   FormActions,
+  FormLoading,
   FormSection,
 } from "@/app/_components/form-section";
 import { navigateAfterSuccess } from "@/app/_components/navigate-after-success";
@@ -75,7 +76,11 @@ export default function EditArticlePage() {
   if (!values) {
     return (
       <ContentContainer className="py-section">
-        <p className="text-sm text-muted-foreground">Loading article…</p>
+        <SectionHeading
+          title="Edit article"
+          description="Saved as a reference — article text is not imported."
+        />
+        <FormLoading label="Loading article" />
       </ContentContainer>
     );
   }

@@ -1,3 +1,5 @@
+import { Skeleton } from "@/components";
+
 /**
  * Quiet field group for product forms. Spacing and a legend carry hierarchy—
  * no cards or dividers.
@@ -16,6 +18,23 @@ export function FormSection({
       </legend>
       {children}
     </fieldset>
+  );
+}
+
+/** Preserves reading-width form layout while an edit page loads. */
+export function FormLoading({ label }: { label: string }) {
+  return (
+    <div
+      className="mt-block max-w-reading space-y-4"
+      aria-busy="true"
+      aria-live="polite"
+    >
+      <p className="sr-only">{label}</p>
+      <Skeleton variant="block" className="h-11" />
+      <Skeleton variant="block" className="h-11" />
+      <Skeleton variant="block" className="h-11" />
+      <Skeleton variant="block" className="h-24" />
+    </div>
   );
 }
 

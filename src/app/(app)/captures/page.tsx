@@ -72,11 +72,9 @@ export default function CapturesPage() {
         ) : empty ? (
           <EmptyState
             icon={<HighlightIcon className="size-6" />}
-            title={query ? "No matching captures" : "No captures yet"}
+            title={query ? "No matches" : "Nothing here yet"}
             description={
-              query
-                ? "Try another word, or clear the search."
-                : "Keep a line from a book or article."
+              query ? "Try a different word." : "Add your first capture."
             }
             action={
               query ? (
