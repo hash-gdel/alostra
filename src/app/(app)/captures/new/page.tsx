@@ -10,6 +10,10 @@ import {
   Textarea,
   useToast,
 } from "@/components";
+import {
+  FormActions,
+  FormSection,
+} from "@/app/_components/form-section";
 import { navigateAfterSuccess } from "@/app/_components/navigate-after-success";
 import { SourceSelectField } from "@/app/_components/source-select-field";
 import type { Article, Book } from "@/lib/domain/types";
@@ -67,62 +71,77 @@ export default function NewCapturePage() {
 
   return (
     <ContentContainer className="py-section">
-      <SectionHeading
-        title="Add a capture"
-        description="Attach a kept line to a book or an article already in your library."
-      />
-      <form onSubmit={onSubmit} className="mt-block flex max-w-reading flex-col gap-4">
-        <SourceSelectField
-          books={books}
-          articles={articles}
-          sourceType={values.sourceType}
-          sourceId={values.sourceId}
-          onSourceTypeChange={(sourceType) =>
-            setValues((v) => ({ ...v, sourceType, pageNumber: "" }))
-          }
-          onSourceIdChange={(sourceId) => setValues((v) => ({ ...v, sourceId }))}
-          sourceTypeError={errors.sourceType}
-          sourceIdError={errors.sourceId}
-        />
-        <Textarea
-          label="Capture text"
-          value={values.text}
-          onChange={(e) => setValues((v) => ({ ...v, text: e.target.value }))}
-          error={errors.text}
-          rows={5}
-          required
-        />
-        <Textarea
-          label="Note"
-          value={values.note}
-          onChange={(e) => setValues((v) => ({ ...v, note: e.target.value }))}
-          description="Optional. Your own words about why this mattered."
-          rows={3}
-        />
-        {values.sourceType === "book" ? (
-          <Input
-            label="Page number"
-            type="number"
-            inputMode="numeric"
-            value={values.pageNumber}
-            onChange={(e) =>
-              setValues((v) => ({ ...v, pageNumber: e.target.value }))
+      <SectionHeading title="Add a capture" />
+      <form
+        onSubmit={onSubmit}
+        className="mt-block flex max-w-reading flex-col gap-block"
+      >
+        <FormSection legend="Source">
+          <SourceSelectField
+            books={books}
+            articles={articles}
+            sourceType={values.sourceType}
+            sourceId={values.sourceId}
+            onSourceTypeChange={(sourceType) =>
+              setValues((v) => ({ ...v, sourceType, pageNumber: "" }))
             }
-            error={errors.pageNumber}
+            onSourceIdChange={(sourceId) =>
+              setValues((v) => ({ ...v, sourceId }))
+            }
+            sourceTypeError={errors.sourceType}
+            sourceIdError={errors.sourceId}
           />
-        ) : null}
-        <div className="mt-2 flex flex-wrap gap-3">
-          <Button
-            type="submit"
-            loading={saving}
-            loadingLabel={saved ? "Saved" : "Saving…"}
-          >
-            Save capture
-          </Button>
-          <Button href="/captures" variant="ghost">
-            Cancel
-          </Button>
-        </div>
+        </FormSection>
+
+        <FormSection legend="Passage">
+          <Textarea
+            label="Passage"
+            value={values.text}
+            onChange={(e) => setValues((v) => ({ ...v, text: e.target.value }))}
+            error={errors.text}
+            rows={7}
+            required
+          />
+        </FormSection>
+
+        <FormSection legend="Reflection">
+          <Textarea
+            label="Note"
+            value={values.note}
+            onChange={(e) => setValues((v) => ({ ...v, note: e.target.value }))}
+            description="Optional"
+            rows={3}
+          />
+          {values.sourceType === "book" ? (
+            <Input
+              label="Page"
+              type="number"
+              inputMode="numeric"
+              value={values.pageNumber}
+              onChange={(e) =>
+                setValues((v) => ({ ...v, pageNumber: e.target.value }))
+              }
+              error={errors.pageNumber}
+            />
+          ) : null}
+        </FormSection>
+
+        <FormActions
+          primary={
+            <Button
+              type="submit"
+              loading={saving}
+              loadingLabel={saved ? "Saved" : "Saving…"}
+            >
+              Save capture
+            </Button>
+          }
+          secondary={
+            <Button href="/captures" variant="ghost">
+              Cancel
+            </Button>
+          }
+        />
       </form>
     </ContentContainer>
   );

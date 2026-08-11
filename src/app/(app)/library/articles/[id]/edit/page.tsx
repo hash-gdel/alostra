@@ -10,6 +10,10 @@ import {
   SectionHeading,
   useToast,
 } from "@/components";
+import {
+  FormActions,
+  FormSection,
+} from "@/app/_components/form-section";
 import { navigateAfterSuccess } from "@/app/_components/navigate-after-success";
 import { StatusField } from "@/app/_components/status-field";
 import { ARTICLE_STATUS_LABELS } from "@/lib/domain/labels";
@@ -101,72 +105,91 @@ export default function EditArticlePage() {
     <ContentContainer className="py-section">
       <SectionHeading
         title="Edit article"
-        description="Finished sets progress to 100%. Article text is not stored in this milestone."
+        description="Saved as a reference — article text is not imported."
       />
-      <form onSubmit={onSubmit} className="mt-block flex max-w-reading flex-col gap-4">
-        <Input
-          label="Title"
-          value={values.title}
-          onChange={(e) => setValues((v) => v && { ...v, title: e.target.value })}
-          error={errors.title}
-          required
-        />
-        <Input
-          label="URL"
-          type="url"
-          value={values.url}
-          onChange={(e) => setValues((v) => v && { ...v, url: e.target.value })}
-          error={errors.url}
-          required
-        />
-        <Input
-          label="Author"
-          value={values.author}
-          onChange={(e) =>
-            setValues((v) => v && { ...v, author: e.target.value })
+      <form
+        onSubmit={onSubmit}
+        className="mt-block flex max-w-reading flex-col gap-block"
+      >
+        <FormSection legend="Identity">
+          <Input
+            label="Title"
+            value={values.title}
+            onChange={(e) =>
+              setValues((v) => v && { ...v, title: e.target.value })
+            }
+            error={errors.title}
+            required
+          />
+          <Input
+            label="URL"
+            type="url"
+            value={values.url}
+            onChange={(e) =>
+              setValues((v) => v && { ...v, url: e.target.value })
+            }
+            error={errors.url}
+            required
+          />
+          <Input
+            label="Author"
+            value={values.author}
+            onChange={(e) =>
+              setValues((v) => v && { ...v, author: e.target.value })
+            }
+          />
+          <Input
+            label="Site"
+            value={values.siteName}
+            onChange={(e) =>
+              setValues((v) => v && { ...v, siteName: e.target.value })
+            }
+          />
+        </FormSection>
+
+        <FormSection legend="Reading">
+          <StatusField
+            label="Status"
+            name="status"
+            value={values.status}
+            onChange={(status) => setValues((v) => v && { ...v, status })}
+            options={STATUS_OPTIONS}
+            error={errors.status}
+          />
+        </FormSection>
+
+        <FormActions
+          primary={
+            <Button
+              type="submit"
+              loading={saving}
+              loadingLabel={saved ? "Saved" : "Saving…"}
+            >
+              Save article
+            </Button>
+          }
+          secondary={
+            <Button href="/library" variant="ghost">
+              Cancel
+            </Button>
+          }
+          destructive={
+            <Button
+              type="button"
+              variant="quiet"
+              onClick={() => setConfirmOpen(true)}
+            >
+              Delete
+            </Button>
           }
         />
-        <Input
-          label="Site name"
-          value={values.siteName}
-          onChange={(e) =>
-            setValues((v) => v && { ...v, siteName: e.target.value })
-          }
-        />
-        <StatusField
-          label="Status"
-          name="status"
-          value={values.status}
-          onChange={(status) => setValues((v) => v && { ...v, status })}
-          options={STATUS_OPTIONS}
-          error={errors.status}
-        />
-        <div className="mt-2 flex flex-wrap gap-3">
-          <Button
-            type="submit"
-            loading={saving}
-            loadingLabel={saved ? "Saved" : "Saving…"}
-          >
-            Save changes
-          </Button>
-          <Button href="/library" variant="ghost">
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="quiet"
-            onClick={() => setConfirmOpen(true)}
-          >
-            Delete article
-          </Button>
-        </div>
       </form>
 
       <ConfirmationDialog
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         title="Delete this article?"
-        description="Captures attached to it will be deleted too. This cannot be undone."
+        description="Captures from this article will be deleted too. This cannot be undone."
         confirmLabel="Delete article"
         confirming={deleting}
         onConfirm={() => {

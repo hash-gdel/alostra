@@ -188,7 +188,7 @@ export function validateCaptureForm(values: CaptureFormValues): {
     errors.sourceType = "Choose a book or an article.";
   }
   if (!sourceId) errors.sourceId = "Choose what this capture belongs to.";
-  if (!text) errors.text = "Capture text is required.";
+  if (!text) errors.text = "Passage is required.";
   if (pageNumber === null) {
     errors.pageNumber = "Enter a whole number, or leave blank.";
   } else if (pageNumber !== undefined && pageNumber < 0) {
