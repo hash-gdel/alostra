@@ -1,13 +1,35 @@
 # Milestone 4 — Product Experience Plan
 
-**Status: approved and frozen.**
+**Status: Implemented and frozen.**
 
 This document is the single source of truth for Milestone 4 Product Experience.
-Implementation must follow it. Do not reinterpret philosophy, expand scope, or
-change frozen Milestone 1/2 APIs without explicit approval.
+It records the design decisions that were implemented. Do not reinterpret
+philosophy, expand scope, or change frozen Milestone 1/2 APIs without explicit
+approval. Do not casually redesign the signed-in product surfaces described
+here.
 
 Change control: revise this plan only when a demonstrated product or
 accessibility gap requires it—not for aesthetic preference or convenience.
+
+### Completion record
+
+Milestone 4 was completed after implementation and validation of:
+
+- Home product experience
+- Library product experience
+- Captures product experience
+- Forms & Flow
+- post-action navigation
+- shared route transitions
+- shell/navigation consistency
+- typography consistency
+- Bookmark Thread discipline
+- loading / empty / error states
+- mobile behavior
+- accessibility consistency
+
+Implementation used composition and app-local helpers only. Frozen Milestone 1
+tokens and Milestone 2 component APIs were not changed.
 
 # Milestone 4 — Product Experience plan
 
@@ -345,6 +367,8 @@ No new frozen primitives.
 
 ## 18. Acceptance criteria
 
+**Status: satisfied.**
+
 - Signed-in Home answers “what should I return to?” with dominant Continue, then Recent, Captures, quiet Library entry.
 - Home uses content-width composition; no 3-column catalogue as the primary Home pattern.
 - Library V1 defaults to a unified editorial list (not locked forever against future modes); books and articles distinguishable; filters/search remain quiet.
@@ -354,6 +378,56 @@ No new frozen primitives.
 - Loading never flashes false empties; reduced motion respected.
 - Copy has no spiritual/SaaS/dashboard language; no streaks/stats/AI.
 - Lint, typecheck, tests, build pass.
+
+### Final validation results
+
+- `npm run lint` — pass
+- `npx tsc --noEmit` — pass
+- `npm test` — 36 tests pass
+- `npm run build` — pass
+
+---
+
+## 18a. Accepted V1 limitations — not Milestone 4 blockers
+
+These are known, accepted constraints. They do not block Milestone 4 freeze.
+
+- `SectionHeading` supports its existing frozen heading hierarchy, so some page titles remain `h2`.
+- `ContinueReadingCard` has its existing eyebrow behavior; Home handles duplication through composition.
+- Remote book-cover hosts / automatic cover discovery are not configured in V1.
+- Browser Back receives the destination enter transition only because of the current App Router transition architecture.
+
+---
+
+## 18b. Freeze boundary
+
+Milestone 4 product experience is now considered stable.
+
+Future work must **not** casually redesign or alter:
+
+- Home hierarchy
+- Library editorial-list model
+- Captures quote-first model
+- form hierarchy
+- app navigation structure
+- Bookmark Thread roles
+- typography philosophy
+- route-transition philosophy
+- empty/loading interaction philosophy
+
+Changes to these areas should happen only when:
+
+1. a confirmed bug requires it,
+2. accessibility or security requires it,
+3. real user evidence justifies a product change,
+4. or a future explicitly approved milestone intentionally supersedes the decision.
+
+This freeze does **not** mean the code can never change. It means future agents
+must preserve the established product decisions unless there is a documented
+reason to change them.
+
+Milestone 1 tokens and Milestone 2 component APIs remain frozen independently.
+Milestone 4 was implemented without changing those APIs.
 
 ---
 

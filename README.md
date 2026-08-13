@@ -196,9 +196,9 @@ The application is designed to be:
 
 ---
 
-## 🚧 Milestone 4 — Product Experience
+## ✅ Milestone 4 — Product Experience: Complete
 
-Plan **approved and frozen** — implementation follows
+**Implemented and frozen.** See
 [`docs/milestone-4-product-experience-plan.md`](./docs/milestone-4-product-experience-plan.md).
 
 - Signed-in Home, Library, Captures, shell, and forms
@@ -262,7 +262,7 @@ npm run build
   library in `src/components/`.
 - [`docs/data.md`](./docs/data.md) — domain model and Supabase persistence.
 - [`docs/authentication-architecture.md`](./docs/authentication-architecture.md) — auth and persistence architecture.
-- [`docs/milestone-4-product-experience-plan.md`](./docs/milestone-4-product-experience-plan.md) — Milestone 4 product experience plan (frozen).
+- [`docs/milestone-4-product-experience-plan.md`](./docs/milestone-4-product-experience-plan.md) — Milestone 4 product experience (implemented and frozen).
 - [`docs/ux-decisions.md`](./docs/ux-decisions.md) — what we decided and why.
 
 `/dev/design-system` renders every token and every component, in both modes,

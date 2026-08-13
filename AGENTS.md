@@ -67,4 +67,5 @@ Do not implement:
 - Work in small, independently testable milestones.
 - Never implement future features without explicit approval.
 - Follow `docs/authentication-architecture.md` for auth and persistence.
-- Follow `docs/milestone-4-product-experience-plan.md` for Milestone 4 signed-in product UX (frozen plan).
+- Follow `docs/milestone-4-product-experience-plan.md` for Milestone 4 signed-in product UX (**implemented and frozen**).
+- Before changing signed-in UX (Home, Library, Captures, forms, shell, route transitions, Thread usage, empty/loading patterns, or typography philosophy), read that Milestone 4 plan and treat its decisions as frozen. Do not redesign those surfaces incidentally while doing unrelated work. Future approved milestones may explicitly supersede frozen decisions; casual redesign does not.
