@@ -4,6 +4,18 @@ import { useId } from "react";
 import { Label } from "@/components";
 import type { Article, Book } from "@/lib/domain/types";
 
+const selectClasses = (invalid: boolean) =>
+  [
+    "h-11 w-full rounded-md border bg-surface px-3 text-base text-foreground",
+    "transition-colors duration-(--duration-quick) ease-standard",
+    "disabled:cursor-not-allowed disabled:bg-surface-sunken disabled:text-muted-foreground",
+    invalid ? "border-border-strong" : "border-border",
+  ].join(" ");
+
+/**
+ * Native selects for attaching a capture to a book or article.
+ * App-local — there is no Select primitive in the frozen component library.
+ */
 export function SourceSelectField({
   books,
   articles,
@@ -25,21 +37,24 @@ export function SourceSelectField({
 }) {
   const typeId = useId();
   const sourceFieldId = useId();
-  const options =
-    sourceType === "article"
-      ? articles.map((article) => ({
-          value: article.id,
-          label: article.title,
-        }))
-      : books.map((book) => ({
-          value: book.id,
-          label: book.author ? `${book.title} — ${book.author}` : book.title,
-        }));
+  const isArticle = sourceType === "article";
+  const options = isArticle
+    ? articles.map((article) => ({
+        value: article.id,
+        label: article.title,
+      }))
+    : books.map((book) => ({
+        value: book.id,
+        label: book.author ? `${book.title} — ${book.author}` : book.title,
+      }));
+
+  const emptyLabel = isArticle ? "No articles yet" : "No books yet";
+  const chooseLabel = isArticle ? "Choose an article" : "Choose a book";
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={typeId}>Source type</Label>
+        <Label htmlFor={typeId}>From</Label>
         <select
           id={typeId}
           value={sourceType}
@@ -48,10 +63,7 @@ export function SourceSelectField({
             onSourceIdChange("");
           }}
           aria-invalid={sourceTypeError ? true : undefined}
-          className={[
-            "h-11 w-full rounded-md border bg-surface px-3 text-base",
-            sourceTypeError ? "border-border-strong" : "border-border",
-          ].join(" ")}
+          className={selectClasses(Boolean(sourceTypeError))}
         >
           <option value="book">Book</option>
           <option value="article">Article</option>
@@ -61,23 +73,16 @@ export function SourceSelectField({
         ) : null}
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={sourceFieldId}>
-          {sourceType === "article" ? "Article" : "Book"}
-        </Label>
+        <Label htmlFor={sourceFieldId}>{isArticle ? "Article" : "Book"}</Label>
         <select
           id={sourceFieldId}
           value={sourceId}
           onChange={(event) => onSourceIdChange(event.target.value)}
           aria-invalid={sourceIdError ? true : undefined}
-          className={[
-            "h-11 w-full rounded-md border bg-surface px-3 text-base",
-            sourceIdError ? "border-border-strong" : "border-border",
-          ].join(" ")}
+          className={selectClasses(Boolean(sourceIdError))}
         >
           <option value="">
-            {options.length === 0
-              ? "Nothing to attach to yet"
-              : "Choose a source"}
+            {options.length === 0 ? emptyLabel : chooseLabel}
           </option>
           {options.map((option) => (
             <option key={option.value} value={option.value}>

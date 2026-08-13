@@ -2,19 +2,19 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import {
+  BookIcon,
   Button,
   HomeIcon,
   InboxIcon,
   MobileNavItem,
   NavigationGroup,
-  QueueIcon,
   SidebarItem,
 } from "@/components";
 import { useAuth } from "@/lib/auth/auth-context";
 
 const NAV = [
   { href: "/home", label: "Home", icon: HomeIcon },
-  { href: "/library", label: "Library", icon: QueueIcon },
+  { href: "/library", label: "Library", icon: BookIcon },
   { href: "/captures", label: "Captures", icon: InboxIcon },
 ] as const;
 
@@ -34,7 +34,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 flex-col border-r border-border px-3 py-block md:flex">
           <p className="px-3 font-serif text-lg tracking-display">Alostra</p>
           <p className="mt-1 px-3 text-2xs text-muted-foreground">
-            Your reading corner
+            Your reading home
           </p>
           <NavigationGroup ariaLabel="Main" className="mt-section">
             {NAV.map(({ href, label, icon: Icon }) => (

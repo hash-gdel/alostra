@@ -343,3 +343,48 @@
     }
   }
 }
+
+
+/* ----------------------------------------------------------------------------
+   7. PRODUCT ROUTE TRANSITIONS
+   Soft continuity for signed-in `(app)` navigations. Shell chrome is outside
+   the animated surface. Motion is suppressed under prefers-reduced-motion
+   (global rule above, plus an explicit opt-out here).
+   ---------------------------------------------------------------------------- */
+
+@keyframes app-route-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.app-route-surface {
+  min-height: 100%;
+  transition:
+    opacity var(--duration-quick) var(--ease-standard),
+    transform var(--duration-quick) var(--ease-standard);
+  animation: app-route-enter var(--duration-state) var(--ease-standard) both;
+}
+
+.app-route-surface[data-leaving="true"] {
+  animation: none;
+  opacity: 0.86;
+  transform: translateY(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-route-surface {
+    animation: none;
+    transition: none;
+  }
+
+  .app-route-surface[data-leaving="true"] {
+    opacity: 1;
+    transform: none;
+  }
+}

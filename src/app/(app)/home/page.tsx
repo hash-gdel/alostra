@@ -7,9 +7,10 @@ import {
   Button,
   CaptureCard,
   ContinueReadingCard,
+  ContentContainer,
   EmptyState,
-  PageContainer,
   SectionHeading,
+  Skeleton,
 } from "@/components";
 import { useLiveQuery } from "@/app/_components/use-live-query";
 import {
@@ -19,7 +20,7 @@ import {
   bookStatusTone,
   resolveCoverSrc,
 } from "@/lib/domain/labels";
-import type { LibraryItem } from "@/lib/domain/types";
+import type { Article, Book, LibraryItem } from "@/lib/domain/types";
 import {
   getContinueReading,
   listRecentlyAdded,
@@ -45,6 +46,71 @@ async function loadHome(): Promise<HomeData> {
   };
 }
 
+function bookProgress(book: Book) {
+  if (book.status === "want-to-read") return undefined;
+  if (book.totalPages) {
+    return {
+      page: book.currentPage ?? 0,
+      pages: book.totalPages,
+    };
+  }
+  return { percent: book.progressPercent };
+}
+
+function bookStatusProps(book: Book) {
+  if (book.status === "want-to-read") return {};
+  return {
+    status: BOOK_STATUS_LABELS[book.status],
+    statusTone: bookStatusTone(book.status),
+  };
+}
+
+function articleStatusProps(article: Article) {
+  if (article.status === "saved") return {};
+  return {
+    status: ARTICLE_STATUS_LABELS[article.status],
+    statusTone: articleStatusTone(article.status),
+  };
+}
+
+function HomeLoading() {
+  return (
+    <div className="mt-section space-y-section" aria-busy="true" aria-live="polite">
+      <section aria-labelledby="continue-heading">
+        <h1
+          id="continue-heading"
+          className="font-serif text-3xl tracking-display text-balance"
+        >
+          Continue reading
+        </h1>
+        <div className="mt-block flex gap-5">
+          <Skeleton variant="cover" className="w-24 shrink-0 sm:w-32" />
+          <div className="min-w-0 flex-1 space-y-3">
+            <Skeleton lines={2} />
+            <Skeleton variant="block" className="h-2 max-w-80" />
+            <Skeleton variant="block" className="h-10 w-28" />
+          </div>
+        </div>
+      </section>
+      <section aria-labelledby="recent-heading">
+        <SectionHeading id="recent-heading" title="Recently added" />
+        <div className="mt-block space-y-4">
+          <Skeleton variant="block" className="h-20" />
+          <Skeleton variant="block" className="h-20" />
+          <Skeleton variant="block" className="h-20" />
+        </div>
+      </section>
+      <section aria-labelledby="captures-heading">
+        <SectionHeading id="captures-heading" title="Recent captures" />
+        <div className="mt-block space-y-4">
+          <Skeleton variant="block" className="h-28" />
+          <Skeleton variant="block" className="h-28" />
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const { data, loading } = useLiveQuery(loadHome, [], {
     continueItem: undefined,
@@ -57,36 +123,27 @@ export default function HomePage() {
     !loading && !continueItem && recent.length === 0 && captures.length === 0;
 
   return (
-    <PageContainer className="py-section">
-      <header className="max-w-content">
-        <p className="text-2xs font-medium uppercase tracking-label text-muted-foreground">
-          Home
-        </p>
-        <h1 className="mt-2 font-serif text-3xl tracking-display text-balance">
-          Continue where you left off
-        </h1>
-        <p className="mt-3 max-w-reading text-base text-muted-foreground text-pretty">
-          Your books, articles and the lines worth keeping — in one place.
-        </p>
-      </header>
-
-      {empty ? (
-        <div className="mt-section">
+    <ContentContainer className="py-section">
+      {loading ? (
+        <HomeLoading />
+      ) : empty ? (
+        <div className="mt-block">
           <EmptyState
             icon={<BookIcon className="size-6" />}
-            title="Your reading corner is empty"
-            description="Add a book or an article to begin. What you save stays private to your account."
-            action={<Button href="/library">Open the library</Button>}
+            title="Nothing here yet"
+            description="Add your first book."
+            action={<Button href="/library/books/new">Add a book</Button>}
           />
         </div>
       ) : (
-        <div className="mt-section space-y-section">
+        <div className="space-y-section">
           <section aria-labelledby="continue-heading">
-            <SectionHeading
+            <h1
               id="continue-heading"
-              title="Continue reading"
-              description="The thing you are most likely here for."
-            />
+              className="font-serif text-3xl tracking-display text-balance"
+            >
+              Continue reading
+            </h1>
             <div className="mt-block">
               {continueItem ? (
                 continueItem.kind === "book" ? (
@@ -95,15 +152,9 @@ export default function HomePage() {
                     author={continueItem.book.author}
                     coverSrc={resolveCoverSrc(continueItem.book.coverUrl)}
                     href={`/library/books/${continueItem.book.id}/edit`}
-                    progress={
-                      continueItem.book.totalPages
-                        ? {
-                            page: continueItem.book.currentPage ?? 0,
-                            pages: continueItem.book.totalPages,
-                          }
-                        : { percent: continueItem.book.progressPercent }
-                    }
-                    actionLabel="Update progress"
+                    progress={bookProgress(continueItem.book)}
+                    actionLabel="Continue"
+                    className="[&_span.tracking-label]:hidden"
                   />
                 ) : (
                   <ContinueReadingCard
@@ -118,102 +169,106 @@ export default function HomePage() {
                         ? { percent: continueItem.article.progressPercent }
                         : undefined
                     }
-                    actionLabel="Open details"
+                    actionLabel="Continue"
+                    className="[&_span.tracking-label]:hidden"
                   />
                 )
               ) : (
-                <EmptyState
-                  headingLevel={3}
-                  title="Nothing in progress"
-                  description="Mark a book or article as reading and it will appear here."
-                  action={<Button href="/library">Browse the library</Button>}
-                />
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-2 text-sm text-muted-foreground">
+                  <span>Nothing in progress.</span>
+                  <Button href="/library" variant="quiet" size="sm">
+                    Library
+                  </Button>
+                </div>
               )}
             </div>
           </section>
 
-          <section aria-labelledby="recent-heading">
-            <SectionHeading
-              id="recent-heading"
-              title="Recently added"
-              action={
-                <Button href="/library" variant="quiet" size="sm">
-                  Library
-                </Button>
-              }
-            />
-            <div className="mt-block grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {recent.map((item) =>
-                item.kind === "book" ? (
-                  <BookCard
-                    key={item.book.id}
-                    title={item.book.title}
-                    author={item.book.author}
-                    coverSrc={resolveCoverSrc(item.book.coverUrl)}
-                    href={`/library/books/${item.book.id}/edit`}
-                    status={BOOK_STATUS_LABELS[item.book.status]}
-                    statusTone={bookStatusTone(item.book.status)}
-                    progress={
-                      item.book.status === "want-to-read"
-                        ? undefined
-                        : item.book.totalPages
-                          ? {
-                              page: item.book.currentPage ?? 0,
-                              pages: item.book.totalPages,
-                            }
-                          : { percent: item.book.progressPercent }
-                    }
-                  />
-                ) : (
-                  <ArticleCard
-                    key={item.article.id}
-                    title={item.article.title}
-                    source={item.article.siteName ?? item.article.author}
-                    excerpt={item.article.url}
-                    href={`/library/articles/${item.article.id}/edit`}
-                    status={ARTICLE_STATUS_LABELS[item.article.status]}
-                    statusTone={articleStatusTone(item.article.status)}
-                  />
-                ),
-              )}
-            </div>
-          </section>
+          {recent.length > 0 ? (
+            <section aria-labelledby="recent-heading">
+              <SectionHeading
+                id="recent-heading"
+                title="Recently added"
+                action={
+                  <Button href="/library" variant="quiet" size="sm">
+                    Library
+                  </Button>
+                }
+              />
+              <ul className="mt-block flex flex-col gap-4">
+                {recent.map((item) =>
+                  item.kind === "book" ? (
+                    <li key={item.book.id}>
+                      <BookCard
+                        layout="row"
+                        title={item.book.title}
+                        author={item.book.author}
+                        coverSrc={resolveCoverSrc(item.book.coverUrl)}
+                        href={`/library/books/${item.book.id}/edit`}
+                        {...bookStatusProps(item.book)}
+                        progress={bookProgress(item.book)}
+                      />
+                    </li>
+                  ) : (
+                    <li key={item.article.id}>
+                      <ArticleCard
+                        title={item.article.title}
+                        source={
+                          item.article.siteName ?? item.article.author
+                        }
+                        href={`/library/articles/${item.article.id}/edit`}
+                        {...articleStatusProps(item.article)}
+                      />
+                    </li>
+                  ),
+                )}
+              </ul>
+            </section>
+          ) : null}
 
-          <section aria-labelledby="captures-heading">
-            <SectionHeading
-              id="captures-heading"
-              title="Recent captures"
-              action={
-                <Button href="/captures" variant="quiet" size="sm">
-                  All captures
-                </Button>
-              }
-            />
-            <div className="mt-block grid gap-4">
-              {captures.length === 0 ? (
-                <EmptyState
-                  headingLevel={3}
-                  title="No captures yet"
-                  description="Keep a line from a book or article and it will show up here."
-                  action={<Button href="/captures/new">Add a capture</Button>}
-                />
-              ) : (
-                captures.map(({ capture, sourceTitle, sourceDetail }) => (
-                  <CaptureCard
-                    key={capture.id}
-                    quote={capture.text}
-                    sourceTitle={sourceTitle}
-                    sourceType={capture.sourceType}
-                    sourceDetail={sourceDetail}
-                    note={capture.note}
-                    href={`/captures/${capture.id}/edit`}
-                  />
-                ))
-              )}
+          {captures.length > 0 ? (
+            <section aria-labelledby="captures-heading">
+              <SectionHeading
+                id="captures-heading"
+                title="Recent captures"
+                action={
+                  <Button href="/captures" variant="quiet" size="sm">
+                    Captures
+                  </Button>
+                }
+              />
+              <ul className="mt-block flex flex-col gap-4">
+                {captures.map(({ capture, sourceTitle, sourceDetail }) => (
+                  <li key={capture.id}>
+                    <CaptureCard
+                      quote={capture.text}
+                      sourceTitle={sourceTitle}
+                      sourceType={capture.sourceType}
+                      sourceDetail={sourceDetail}
+                      note={capture.note}
+                      href={`/captures/${capture.id}/edit`}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
+          <section aria-labelledby="library-entry-heading" className="pt-block">
+            <h2
+              id="library-entry-heading"
+              className="font-serif text-lg tracking-display"
+            >
+              Your Library
+            </h2>
+            <div className="mt-block">
+              <Button href="/library" variant="quiet">
+                Open library
+              </Button>
             </div>
           </section>
         </div>
       )}
-    </PageContainer>
+    </ContentContainer>
   );
 }

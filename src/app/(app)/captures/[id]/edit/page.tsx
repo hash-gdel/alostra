@@ -11,6 +11,12 @@ import {
   Textarea,
   useToast,
 } from "@/components";
+import {
+  FormActions,
+  FormLoading,
+  FormSection,
+} from "@/app/_components/form-section";
+import { navigateAfterSuccess } from "@/app/_components/navigate-after-success";
 import { SourceSelectField } from "@/app/_components/source-select-field";
 import type { Article, Book } from "@/lib/domain/types";
 import {
@@ -35,6 +41,7 @@ export default function EditCapturePage() {
   const [values, setValues] = useState<CaptureFormValues | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [missing, setMissing] = useState(false);
@@ -74,7 +81,8 @@ export default function EditCapturePage() {
   if (!values) {
     return (
       <ContentContainer className="py-section">
-        <p className="text-sm text-muted-foreground">Loading capture…</p>
+        <SectionHeading title="Edit capture" />
+        <FormLoading label="Loading capture" />
       </ContentContainer>
     );
   }
@@ -87,97 +95,120 @@ export default function EditCapturePage() {
     if (!result.data) return;
 
     setSaving(true);
+    setSaved(false);
     try {
       await updateCapture(id, result.data);
       show({ title: "Capture updated" });
-      router.push("/captures");
+      setSaved(true);
+      await navigateAfterSuccess(router, "/captures");
     } catch {
       show({ title: "Could not update the capture" });
       setSaving(false);
+      setSaved(false);
     }
   }
 
   return (
     <ContentContainer className="py-section">
-      <SectionHeading
-        title="Edit capture"
-        description="The source stays visible so you can always tell where a line came from."
-      />
-      <form onSubmit={onSubmit} className="mt-block flex max-w-reading flex-col gap-4">
-        <SourceSelectField
-          books={books}
-          articles={articles}
-          sourceType={values.sourceType}
-          sourceId={values.sourceId}
-          onSourceTypeChange={(sourceType) =>
-            setValues((v) => v && { ...v, sourceType, pageNumber: "" })
-          }
-          onSourceIdChange={(sourceId) =>
-            setValues((v) => v && { ...v, sourceId })
-          }
-          sourceTypeError={errors.sourceType}
-          sourceIdError={errors.sourceId}
-        />
-        <Textarea
-          label="Capture text"
-          value={values.text}
-          onChange={(e) =>
-            setValues((v) => v && { ...v, text: e.target.value })
-          }
-          error={errors.text}
-          rows={5}
-          required
-        />
-        <Textarea
-          label="Note"
-          value={values.note}
-          onChange={(e) =>
-            setValues((v) => v && { ...v, note: e.target.value })
-          }
-          rows={3}
-        />
-        {values.sourceType === "book" ? (
-          <Input
-            label="Page number"
-            type="number"
-            inputMode="numeric"
-            value={values.pageNumber}
-            onChange={(e) =>
-              setValues((v) => v && { ...v, pageNumber: e.target.value })
+      <SectionHeading title="Edit capture" />
+      <form
+        onSubmit={onSubmit}
+        className="mt-block flex max-w-reading flex-col gap-block"
+      >
+        <FormSection legend="Source">
+          <SourceSelectField
+            books={books}
+            articles={articles}
+            sourceType={values.sourceType}
+            sourceId={values.sourceId}
+            onSourceTypeChange={(sourceType) =>
+              setValues((v) => v && { ...v, sourceType, pageNumber: "" })
             }
-            error={errors.pageNumber}
+            onSourceIdChange={(sourceId) =>
+              setValues((v) => v && { ...v, sourceId })
+            }
+            sourceTypeError={errors.sourceType}
+            sourceIdError={errors.sourceId}
           />
-        ) : null}
-        <div className="mt-2 flex flex-wrap gap-3">
-          <Button type="submit" loading={saving} loadingLabel="Saving…">
-            Save changes
-          </Button>
-          <Button href="/captures" variant="ghost">
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="quiet"
-            onClick={() => setConfirmOpen(true)}
-          >
-            Delete capture
-          </Button>
-        </div>
+        </FormSection>
+
+        <FormSection legend="Passage">
+          <Textarea
+            label="Passage"
+            value={values.text}
+            onChange={(e) =>
+              setValues((v) => v && { ...v, text: e.target.value })
+            }
+            error={errors.text}
+            rows={7}
+            required
+          />
+        </FormSection>
+
+        <FormSection legend="Reflection">
+          <Textarea
+            label="Note"
+            value={values.note}
+            onChange={(e) =>
+              setValues((v) => v && { ...v, note: e.target.value })
+            }
+            description="Optional"
+            rows={3}
+          />
+          {values.sourceType === "book" ? (
+            <Input
+              label="Page"
+              type="number"
+              inputMode="numeric"
+              value={values.pageNumber}
+              onChange={(e) =>
+                setValues((v) => v && { ...v, pageNumber: e.target.value })
+              }
+              error={errors.pageNumber}
+            />
+          ) : null}
+        </FormSection>
+
+        <FormActions
+          primary={
+            <Button
+              type="submit"
+              loading={saving}
+              loadingLabel={saved ? "Saved" : "Saving…"}
+            >
+              Save capture
+            </Button>
+          }
+          secondary={
+            <Button href="/captures" variant="ghost">
+              Cancel
+            </Button>
+          }
+          destructive={
+            <Button
+              type="button"
+              variant="quiet"
+              onClick={() => setConfirmOpen(true)}
+            >
+              Delete
+            </Button>
+          }
+        />
       </form>
 
       <ConfirmationDialog
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         title="Delete this capture?"
-        description="The kept line will be removed from this device. This cannot be undone."
+        description="This cannot be undone."
         confirmLabel="Delete capture"
         confirming={deleting}
         onConfirm={() => {
           setDeleting(true);
           void deleteCapture(id)
-            .then(() => {
+            .then(async () => {
               show({ title: "Capture deleted" });
-              router.push("/captures");
+              await navigateAfterSuccess(router, "/captures");
             })
             .catch(() => {
               show({ title: "Could not delete the capture" });

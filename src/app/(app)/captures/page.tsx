@@ -4,11 +4,12 @@ import { useState } from "react";
 import {
   Button,
   CaptureCard,
+  ContentContainer,
   EmptyState,
   HighlightIcon,
-  PageContainer,
   SearchInput,
   SectionHeading,
+  Skeleton,
 } from "@/components";
 import { useLiveQuery } from "@/app/_components/use-live-query";
 import { captureMatchesQuery } from "@/lib/domain/search";
@@ -16,6 +17,16 @@ import {
   listCapturesWithSources,
   type CaptureWithSource,
 } from "@/lib/repositories/captures";
+
+function CapturesLoading() {
+  return (
+    <div className="mt-section space-y-5" aria-busy="true" aria-live="polite">
+      <Skeleton variant="block" className="h-28" />
+      <Skeleton variant="block" className="h-28" />
+      <Skeleton variant="block" className="h-28" />
+    </div>
+  );
+}
 
 export default function CapturesPage() {
   const [query, setQuery] = useState("");
@@ -32,11 +43,13 @@ export default function CapturesPage() {
       (sourceDetail ?? "").toLowerCase().includes(query.trim().toLowerCase()),
   );
 
+  const empty = !loading && visible.length === 0;
+
   return (
-    <PageContainer className="py-section">
+    <ContentContainer className="py-section">
       <SectionHeading
+        id="captures-heading"
         title="Captures"
-        description="Lines and notes kept from books and articles, in one place."
         action={
           <Button href="/captures/new" size="sm">
             Add capture
@@ -44,23 +57,24 @@ export default function CapturesPage() {
         }
       />
 
-      <div className="mt-block max-w-content">
+      <div className="mt-section">
         <SearchInput
           value={query}
           onValueChange={setQuery}
-          placeholder="Search capture text and sources…"
+          placeholder="Search passages and sources…"
+          aria-label="Search captures"
         />
       </div>
 
       <div className="mt-section">
-        {!loading && visible.length === 0 ? (
+        {loading ? (
+          <CapturesLoading />
+        ) : empty ? (
           <EmptyState
             icon={<HighlightIcon className="size-6" />}
-            title={query ? "No matching captures" : "No captures yet"}
+            title={query ? "No matches" : "Nothing here yet"}
             description={
-              query
-                ? "Try another word, or clear the search."
-                : "Keep a line from a book or article and it will appear here."
+              query ? "Try a different word." : "Add your first capture."
             }
             action={
               query ? (
@@ -73,7 +87,7 @@ export default function CapturesPage() {
             }
           />
         ) : (
-          <ul className="grid max-w-content gap-4">
+          <ul className="flex flex-col gap-5">
             {visible.map(({ capture, sourceTitle, sourceDetail }) => (
               <li key={capture.id}>
                 <CaptureCard
@@ -89,6 +103,6 @@ export default function CapturesPage() {
           </ul>
         )}
       </div>
-    </PageContainer>
+    </ContentContainer>
   );
 }

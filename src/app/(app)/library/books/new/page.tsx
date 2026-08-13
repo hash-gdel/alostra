@@ -9,6 +9,11 @@ import {
   SectionHeading,
   useToast,
 } from "@/components";
+import {
+  FormActions,
+  FormSection,
+} from "@/app/_components/form-section";
+import { navigateAfterSuccess } from "@/app/_components/navigate-after-success";
 import { StatusField } from "@/app/_components/status-field";
 import { BOOK_STATUS_LABELS } from "@/lib/domain/labels";
 import {
@@ -35,6 +40,7 @@ export default function NewBookPage() {
   });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -43,82 +49,104 @@ export default function NewBookPage() {
     if (!result.data) return;
 
     setSaving(true);
+    setSaved(false);
     try {
-      const book = await createBook(result.data);
+      await createBook(result.data);
       show({ title: "Book added" });
-      router.push(`/library/books/${book.id}/edit`);
+      setSaved(true);
+      await navigateAfterSuccess(router, "/library");
     } catch {
       show({ title: "Could not save the book" });
       setSaving(false);
+      setSaved(false);
     }
   }
 
   return (
     <ContentContainer className="py-section">
-      <SectionHeading
-        title="Add a book"
-        description="Title is required. Progress is calculated from pages when you provide them."
-      />
-      <form onSubmit={onSubmit} className="mt-block flex max-w-reading flex-col gap-4">
-        <Input
-          label="Title"
-          value={values.title}
-          onChange={(e) => setValues((v) => ({ ...v, title: e.target.value }))}
-          error={errors.title}
-          required
-        />
-        <Input
-          label="Author"
-          value={values.author}
-          onChange={(e) => setValues((v) => ({ ...v, author: e.target.value }))}
-        />
-        <StatusField
-          label="Status"
-          name="status"
-          value={values.status}
-          onChange={(status) => setValues((v) => ({ ...v, status }))}
-          options={STATUS_OPTIONS}
-          error={errors.status}
-        />
-        <div className="grid gap-4 sm:grid-cols-2">
+      <SectionHeading title="Add a book" />
+      <form
+        onSubmit={onSubmit}
+        className="mt-block flex max-w-reading flex-col gap-block"
+      >
+        <FormSection legend="Identity">
           <Input
-            label="Current page"
-            type="number"
-            inputMode="numeric"
-            value={values.currentPage}
-            onChange={(e) =>
-              setValues((v) => ({ ...v, currentPage: e.target.value }))
-            }
-            error={errors.currentPage}
+            label="Title"
+            value={values.title}
+            onChange={(e) => setValues((v) => ({ ...v, title: e.target.value }))}
+            error={errors.title}
+            required
           />
           <Input
-            label="Total pages"
-            type="number"
-            inputMode="numeric"
-            value={values.totalPages}
+            label="Author"
+            value={values.author}
             onChange={(e) =>
-              setValues((v) => ({ ...v, totalPages: e.target.value }))
+              setValues((v) => ({ ...v, author: e.target.value }))
             }
-            error={errors.totalPages}
           />
-        </div>
-        <Input
-          label="Cover URL"
-          value={values.coverUrl}
-          onChange={(e) =>
-            setValues((v) => ({ ...v, coverUrl: e.target.value }))
+        </FormSection>
+
+        <FormSection legend="Reading">
+          <StatusField
+            label="Status"
+            name="status"
+            value={values.status}
+            onChange={(status) => setValues((v) => ({ ...v, status }))}
+            options={STATUS_OPTIONS}
+            error={errors.status}
+          />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input
+              label="Current page"
+              type="number"
+              inputMode="numeric"
+              value={values.currentPage}
+              onChange={(e) =>
+                setValues((v) => ({ ...v, currentPage: e.target.value }))
+              }
+              error={errors.currentPage}
+            />
+            <Input
+              label="Total pages"
+              type="number"
+              inputMode="numeric"
+              value={values.totalPages}
+              onChange={(e) =>
+                setValues((v) => ({ ...v, totalPages: e.target.value }))
+              }
+              error={errors.totalPages}
+            />
+          </div>
+        </FormSection>
+
+        <FormSection legend="Optional">
+          <Input
+            label="Cover URL"
+            value={values.coverUrl}
+            onChange={(e) =>
+              setValues((v) => ({ ...v, coverUrl: e.target.value }))
+            }
+            description="Optional. Leave blank to use the default cover."
+            error={errors.coverUrl}
+          />
+        </FormSection>
+
+        <FormActions
+          primary={
+            <Button
+              type="submit"
+              loading={saving}
+              loadingLabel={saved ? "Saved" : "Saving…"}
+            >
+              Save book
+            </Button>
           }
-          description="Optional. Remote covers are stored but not shown until a host is configured."
-          error={errors.coverUrl}
+          secondary={
+            <Button href="/library" variant="ghost">
+              Cancel
+            </Button>
+          }
         />
-        <div className="mt-2 flex flex-wrap gap-3">
-          <Button type="submit" loading={saving} loadingLabel="Saving…">
-            Save book
-          </Button>
-          <Button href="/library" variant="ghost">
-            Cancel
-          </Button>
-        </div>
       </form>
     </ContentContainer>
   );

@@ -69,8 +69,9 @@ records the working principles that emerged while making them. Section 18
 records the decisions made while building the component library, frozen with
 Milestone 2. Section 19 records questions deliberately left open. Section 20
 records Milestone 3 (data and library). Section 21 records authentication and
-Supabase persistence. Persistence details live in [`data.md`](./data.md) and
-[`authentication-architecture.md`](./authentication-architecture.md).
+Supabase persistence. Section 22 records Milestone 4 product experience
+(**implemented and frozen**). Persistence details live in [`data.md`](./data.md)
+and [`authentication-architecture.md`](./authentication-architecture.md).
 
 ### Changes made under this policy
 
@@ -721,3 +722,45 @@ no aggressive onboarding.
 
 Explicitly **not** in this foundation: offline bidirectional sync, OAuth,
 anonymous persistent libraries, book-file storage, conflict UI.
+
+---
+
+## 22. Milestone 4 — product experience (implemented and frozen)
+
+**Status: implemented and frozen.** Source of truth:
+[`milestone-4-product-experience-plan.md`](./milestone-4-product-experience-plan.md).
+
+Milestone 4 delivers the signed-in product (Home, Library, Captures, shell,
+forms, navigation, and route continuity) so it feels like a private reading
+home—by composition, hierarchy, typography, and Bookmark Thread discipline—not
+by decoration or new product scope.
+
+Alostra is the private home for everything a user reads.
+
+Implemented / frozen principles:
+
+- Whitespace over density
+- Micro-interactions over animations
+- Recognition before information
+- Continue-first Home (unfinished thought, not a dashboard widget)
+- Unified editorial Library (V1 list model; not irreversible forever)
+- Quote-first Captures (kept fragments, not a notes database or PKM)
+- Reading-focused forms (identity → relationship → optional detail)
+- Bookmark Thread only for reserved semantic roles
+- Serif for reading / content identity; sans for controls and metadata
+- No unnecessary dashboard, gamification, or SaaS language
+
+Acceptance criteria in the plan document are satisfied. Validation recorded
+there: lint, `tsc`, 36 tests, and production build all pass. Accepted V1
+limitations (heading-level freeze, Continue eyebrow composition, remote cover
+hosts, browser-Back enter-only) are non-blocking and documented in the plan.
+
+Explicitly **not** in Milestone 4: AI, recommendations, reminders, streaks,
+goals, social features, dashboards, charts, analytics UI, EPUB/PDF readers,
+offline sync, auth/persistence redesign, payments, integrations, spine/shelf
+skeuomorphism, new fonts, or frozen Milestone 1/2 API changes for aesthetics.
+
+Milestone 1 tokens and Milestone 2 component APIs remain frozen. Milestone 4
+shipped through composition and app-local helpers without changing those APIs.
+Do not casually redesign frozen M4 product surfaces; see the plan’s freeze
+boundary.

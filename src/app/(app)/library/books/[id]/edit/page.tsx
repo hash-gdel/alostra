@@ -10,6 +10,12 @@ import {
   SectionHeading,
   useToast,
 } from "@/components";
+import {
+  FormActions,
+  FormLoading,
+  FormSection,
+} from "@/app/_components/form-section";
+import { navigateAfterSuccess } from "@/app/_components/navigate-after-success";
 import { StatusField } from "@/app/_components/status-field";
 import { BOOK_STATUS_LABELS } from "@/lib/domain/labels";
 import {
@@ -30,6 +36,7 @@ export default function EditBookPage() {
   const [values, setValues] = useState<BookFormValues | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [missing, setMissing] = useState(false);
@@ -66,7 +73,8 @@ export default function EditBookPage() {
   if (!values) {
     return (
       <ContentContainer className="py-section">
-        <p className="text-sm text-muted-foreground">Loading book…</p>
+        <SectionHeading title="Edit book" />
+        <FormLoading label="Loading book" />
       </ContentContainer>
     );
   }
@@ -79,106 +87,130 @@ export default function EditBookPage() {
     if (!result.data) return;
 
     setSaving(true);
+    setSaved(false);
     try {
       await updateBook(id, result.data);
       show({ title: "Book updated" });
-      router.push("/library");
+      setSaved(true);
+      await navigateAfterSuccess(router, "/library");
     } catch {
       show({ title: "Could not update the book" });
       setSaving(false);
+      setSaved(false);
     }
   }
 
   return (
     <ContentContainer className="py-section">
-      <SectionHeading
-        title="Edit book"
-        description="Changing the current page recalculates progress. Finished sets progress to 100%."
-      />
-      <form onSubmit={onSubmit} className="mt-block flex max-w-reading flex-col gap-4">
-        <Input
-          label="Title"
-          value={values.title}
-          onChange={(e) => setValues((v) => v && { ...v, title: e.target.value })}
-          error={errors.title}
-          required
-        />
-        <Input
-          label="Author"
-          value={values.author}
-          onChange={(e) =>
-            setValues((v) => v && { ...v, author: e.target.value })
-          }
-        />
-        <StatusField
-          label="Status"
-          name="status"
-          value={values.status}
-          onChange={(status) => setValues((v) => v && { ...v, status })}
-          options={STATUS_OPTIONS}
-          error={errors.status}
-        />
-        <div className="grid gap-4 sm:grid-cols-2">
+      <SectionHeading title="Edit book" />
+      <form
+        onSubmit={onSubmit}
+        className="mt-block flex max-w-reading flex-col gap-block"
+      >
+        <FormSection legend="Identity">
           <Input
-            label="Current page"
-            type="number"
-            inputMode="numeric"
-            value={values.currentPage}
+            label="Title"
+            value={values.title}
             onChange={(e) =>
-              setValues((v) => v && { ...v, currentPage: e.target.value })
+              setValues((v) => v && { ...v, title: e.target.value })
             }
-            error={errors.currentPage}
+            error={errors.title}
+            required
           />
           <Input
-            label="Total pages"
-            type="number"
-            inputMode="numeric"
-            value={values.totalPages}
+            label="Author"
+            value={values.author}
             onChange={(e) =>
-              setValues((v) => v && { ...v, totalPages: e.target.value })
+              setValues((v) => v && { ...v, author: e.target.value })
             }
-            error={errors.totalPages}
           />
-        </div>
-        <Input
-          label="Cover URL"
-          value={values.coverUrl}
-          onChange={(e) =>
-            setValues((v) => v && { ...v, coverUrl: e.target.value })
+        </FormSection>
+
+        <FormSection legend="Reading">
+          <StatusField
+            label="Status"
+            name="status"
+            value={values.status}
+            onChange={(status) => setValues((v) => v && { ...v, status })}
+            options={STATUS_OPTIONS}
+            error={errors.status}
+          />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input
+              label="Current page"
+              type="number"
+              inputMode="numeric"
+              value={values.currentPage}
+              onChange={(e) =>
+                setValues((v) => v && { ...v, currentPage: e.target.value })
+              }
+              error={errors.currentPage}
+            />
+            <Input
+              label="Total pages"
+              type="number"
+              inputMode="numeric"
+              value={values.totalPages}
+              onChange={(e) =>
+                setValues((v) => v && { ...v, totalPages: e.target.value })
+              }
+              error={errors.totalPages}
+            />
+          </div>
+        </FormSection>
+
+        <FormSection legend="Optional">
+          <Input
+            label="Cover URL"
+            value={values.coverUrl}
+            onChange={(e) =>
+              setValues((v) => v && { ...v, coverUrl: e.target.value })
+            }
+            description="Optional. Leave blank to use the default cover."
+            error={errors.coverUrl}
+          />
+        </FormSection>
+
+        <FormActions
+          primary={
+            <Button
+              type="submit"
+              loading={saving}
+              loadingLabel={saved ? "Saved" : "Saving…"}
+            >
+              Save book
+            </Button>
           }
-          description="Optional. Remote covers are stored but not shown until a host is configured."
-          error={errors.coverUrl}
+          secondary={
+            <Button href="/library" variant="ghost">
+              Cancel
+            </Button>
+          }
+          destructive={
+            <Button
+              type="button"
+              variant="quiet"
+              onClick={() => setConfirmOpen(true)}
+            >
+              Delete
+            </Button>
+          }
         />
-        <div className="mt-2 flex flex-wrap gap-3">
-          <Button type="submit" loading={saving} loadingLabel="Saving…">
-            Save changes
-          </Button>
-          <Button href="/library" variant="ghost">
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="quiet"
-            onClick={() => setConfirmOpen(true)}
-          >
-            Delete book
-          </Button>
-        </div>
       </form>
 
       <ConfirmationDialog
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         title="Delete this book?"
-        description="Captures attached to it will be deleted too. This cannot be undone."
+        description="Captures from this book will be deleted too. This cannot be undone."
         confirmLabel="Delete book"
         confirming={deleting}
         onConfirm={() => {
           setDeleting(true);
           void deleteBook(id)
-            .then(() => {
+            .then(async () => {
               show({ title: "Book deleted" });
-              router.push("/library");
+              await navigateAfterSuccess(router, "/library");
             })
             .catch(() => {
               show({ title: "Could not delete the book" });
