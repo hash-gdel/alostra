@@ -207,6 +207,17 @@ The application is designed to be:
 
 ---
 
+## 📋 Milestone 5 — Production & Launch Readiness: Planned
+
+**Plan approved and frozen for implementation — Milestone 5 is not complete.**  
+See [`docs/milestone-5-production-launch-readiness-plan.md`](./docs/milestone-5-production-launch-readiness-plan.md).
+
+- Deploy, account lifecycle, legal/trust, security QA
+- Observability, minimal analytics (or deferral), in-app feedback
+- Invite-only private beta and public launch gate
+
+---
+
 ## 🔜 Coming Soon
 
 - Article reading and highlighting
@@ -263,6 +274,7 @@ npm run build
 - [`docs/data.md`](./docs/data.md) — domain model and Supabase persistence.
 - [`docs/authentication-architecture.md`](./docs/authentication-architecture.md) — auth and persistence architecture.
 - [`docs/milestone-4-product-experience-plan.md`](./docs/milestone-4-product-experience-plan.md) — Milestone 4 product experience (implemented and frozen).
+- [`docs/milestone-5-production-launch-readiness-plan.md`](./docs/milestone-5-production-launch-readiness-plan.md) — Milestone 5 production & launch readiness (plan approved and frozen for implementation; not yet complete).
 - [`docs/ux-decisions.md`](./docs/ux-decisions.md) — what we decided and why.
 
 `/dev/design-system` renders every token and every component, in both modes,
